@@ -16,7 +16,7 @@ nextflow_workflow {
             params {}
             workflow {
                 '''
-                def profile_params = params + [min_kmer_fraction: "0.4", k: "27", ribo_suffix: "ribo"]
+                def profile_params = params + [ribo_suffix: "ribo"]
                 input[0] = Channel.of("test")
                     | combine(Channel.of("${projectDir}/test-data/toy-data/empty_file.txt"))
                 input[1] = Channel.of(true)
@@ -51,7 +51,7 @@ nextflow_workflow {
             }
             workflow {
                 '''
-                def profile_params = params + [min_kmer_fraction: "0.4", k: "27", ribo_suffix: "ribo"]
+                def profile_params = params + [ribo_suffix: "ribo"]
                 input[0] = Channel.of("test")
                     | combine(Channel.of("${projectDir}/test-data/tiny-index/reads/interleaved.fastq"))
                 input[1] = Channel.of(false)
@@ -81,7 +81,7 @@ nextflow_workflow {
             params {}
             workflow {
                 '''
-                def profile_params = params + [min_kmer_fraction: "0.4", k: "27", ribo_suffix: "ribo"]
+                def profile_params = params + [ribo_suffix: "ribo"]
                 input[0] = Channel.of("test")
                     | combine(Channel.of("${projectDir}/test-data/tiny-index/reads/R1.fastq"))
                 input[1] = Channel.of(true)
@@ -93,8 +93,8 @@ nextflow_workflow {
             assert workflow.success
             def ribo = path(workflow.out.test_ribo[0][1])
             def noribo = path(workflow.out.test_noribo[0][1])
-            assert ribo.fileName.toString() == "test_ribo_bbduk_match.fastq.gz"
-            assert noribo.fileName.toString() == "test_ribo_bbduk_nomatch.fastq.gz"
+            assert ribo.fileName.toString() == "test_ribo_sortmerna_match.fastq.gz"
+            assert noribo.fileName.toString() == "test_ribo_sortmerna_nomatch.fastq.gz"
             // Every input read lands in exactly one output, unpaired
             def input_ids = path("${projectDir}/test-data/tiny-index/reads/R1.fastq").fastq.readNames
             def output_ids = ribo.fastq.readNames + noribo.fastq.readNames
@@ -110,7 +110,7 @@ nextflow_workflow {
             params {}
             workflow {
                 '''
-                def profile_params = params + [min_kmer_fraction: "0.4", k: "27", ribo_suffix: "ribo"]
+                def profile_params = params + [ribo_suffix: "ribo"]
                 input[0] = Channel.of("test")
                     | combine(Channel.of("${projectDir}/test-data/tiny-index/reads/ont.fastq"))
                 input[1] = Channel.of(true)

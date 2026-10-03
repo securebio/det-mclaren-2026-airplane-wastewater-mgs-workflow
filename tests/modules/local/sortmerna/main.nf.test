@@ -1,0 +1,87 @@
+nextflow_process {
+
+    name "Test process SORTMERNA"
+    script "modules/local/sortmerna/main.nf"
+    process "SORTMERNA"
+    config "tests/configs/run.config"
+    tag "module"
+    tag "sortmerna"
+
+    test("Should keep pairs together and conserve reads on interleaved input") {
+        tag "expect_success"
+        tag "interleaved"
+        when {
+            process {
+                '''
+                input[0] = Channel.of("test")
+                    | combine(Channel.of("${projectDir}/test-data/tiny-index/reads/interleaved.fastq"))
+                input[1] = params.sortmerna_ref
+                input[2] = params.sortmerna_index_dir
+                input[3] = [suffix: "ribo", interleaved: true]
+                '''
+            }
+        }
+        then {
+            assert process.success
+            def ids_in = path(process.out.input[0][1]).fastq.readNames
+            def ids_match = path(process.out.match[0][1]).fastq.readNames
+            def ids_nomatch = path(process.out.nomatch[0][1]).fastq.readNames
+            // Some pairs match the test reference, and every read lands in exactly one output
+            assert ids_match.size() > 0
+            assert ids_nomatch.size() > 0
+            assert (ids_match + ids_nomatch).sort() == ids_in.sort()
+            // Outputs stay interleaved: mates are adjacent, with the same read ID
+            for (ids in [ids_match, ids_nomatch]) {
+                assert ids.size() % 2 == 0
+                for (int i = 0; i < ids.size(); i += 2) {
+                    assert ids[i].tokenize(" ")[0] == ids[i + 1].tokenize(" ")[0]
+                }
+            }
+        }
+    }
+
+    test("Should conserve reads on single-end input") {
+        tag "expect_success"
+        tag "single_end"
+        when {
+            process {
+                '''
+                input[0] = Channel.of("test")
+                    | combine(Channel.of("${projectDir}/test-data/tiny-index/reads/R1.fastq"))
+                input[1] = params.sortmerna_ref
+                input[2] = params.sortmerna_index_dir
+                input[3] = [suffix: "ribo", interleaved: false]
+                '''
+            }
+        }
+        then {
+            assert process.success
+            def ids_in = path(process.out.input[0][1]).fastq.readNames
+            def ids_match = path(process.out.match[0][1]).fastq.readNames
+            def ids_nomatch = path(process.out.nomatch[0][1]).fastq.readNames
+            assert (ids_match + ids_nomatch).sort() == ids_in.sort()
+        }
+    }
+
+    test("Should handle empty input") {
+        tag "expect_success"
+        tag "empty_input"
+        when {
+            process {
+                '''
+                input[0] = Channel.of("test")
+                    | combine(Channel.of("${projectDir}/test-data/toy-data/empty_file.txt"))
+                input[1] = params.sortmerna_ref
+                input[2] = params.sortmerna_index_dir
+                input[3] = [suffix: "ribo", interleaved: true]
+                '''
+            }
+        }
+        then {
+            assert process.success
+            assert path(process.out.match[0][1]).linesGzip.size() == 0
+            assert path(process.out.nomatch[0][1]).linesGzip.size() == 0
+        }
+    }
+
+}

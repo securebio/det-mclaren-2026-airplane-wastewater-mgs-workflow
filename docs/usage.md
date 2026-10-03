@@ -18,6 +18,7 @@ To run the workflow on new data, you need:
     - The base directory in which to put the working and output directories (`params.base_dir`).
     - The directory containing the outputs of the reference workflow (`params.ref_dir`).
     - The sample sheet (`params.sample_sheet`).
+    - For non-ONT platforms, the SortMeRNA reference FASTA and prebuilt index for the ribosomal screen (`params.sortmerna_ref`, `params.sortmerna_index_dir`), built with `bin/build_sortmerna_index.sh`.
     - The platform (e.g. `illumina` or `ont`)
     - Various other parameter values.
 
@@ -86,8 +87,12 @@ nextflow run <PATH/TO/PIPELINE/DIR> \
   --base_dir <BASE_DIR> \
   --ref_dir <REF_DIR> \
   --platform <PLATFORM> \
+  --sortmerna_ref <SORTMERNA_DIR>/smr_v4.3_sensitive_db.fasta \
+  --sortmerna_index_dir <SORTMERNA_DIR>/idx \
   --queue <BATCH_QUEUE_NAME>
 ```
+
+`<SORTMERNA_DIR>` is the SortMeRNA reference and index built by `bin/build_sortmerna_index.sh` (see [installation](./installation.md)); for ONT, omit the two `--sortmerna_*` parameters.
 
 where `<PATH/TO/PIPELINE/DIR>` specifies the path to the directory containing this repository's `main.nf` file. Any `params.*` value in the config file can be overridden with `--<param>` on the command line. If you copied the config file into the launch directory as `nextflow.config`, you can omit the `-c` flag.
 

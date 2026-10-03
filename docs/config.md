@@ -18,6 +18,8 @@ This configuration file controls the pipeline's main RUN workflow. Its options a
 - `params.ref_dir` [str]: Path to the directory containing the outputs of the [`index` workflow](./index.md).
 - `params.sample_sheet` [str]: Path to the [sample sheet](./usage.md#11-the-sample-sheet) used for the pipeline run.
 - `params.adapters` [str]: Path to the adapter file for adapter trimming (default [`ref/adapters.fasta`](./ref/adapters.fasta).
+- `params.sortmerna_ref` [str]: Path to the SortMeRNA reference FASTA for the ribosomal screen in taxonomic profiling (non-ONT platforms only; no default). Built, with the index, by `bin/build_sortmerna_index.sh`.
+- `params.sortmerna_index_dir` [str]: Path to the prebuilt SortMeRNA index directory for `params.sortmerna_ref` (non-ONT platforms only; no default). The index is tied to the SortMeRNA version in the pipeline's container.
 - `params.n_reads_profile` [int]: The number of reads per sample to run through taxonomic profiling (default 1 million).
 - `params.bt2_score_threshold` [float]: The length-normalized Bowtie2 score threshold above which a read is considered a valid hit for a host-infecting virus (typically 15 or 20).
 - `params.bracken_threshold` [int]: Minimum number of reads that must be assigned to a taxon for Bracken to include it. (default 1)
@@ -33,8 +35,8 @@ This configuration file controls the pipeline's main RUN workflow. Its options a
 - `params.virus_host_db_url` [str]: URL for Virus-Host DB.
 - `params.human_url` [str]: URL for downloading the human genome in FASTA format, which is used in index construction for contaminant screening.
 - `params.genome_urls` [list(str)]: URLs for downloading other common contaminant genomes.
-- `params.ssu_url` [str]: URL for the SILVA SSU reference database, used in ribosomal classification.
-- `params.lsu_url` [str]: URL for the SILVA LSU reference database, used in ribosomal classification.
+- `params.ssu_url` [str]: URL for the SILVA SSU reference database, used in ribosomal classification of ONT reads (other platforms use SortMeRNA's own database).
+- `params.lsu_url` [str]: URL for the SILVA LSU reference database, used in ribosomal classification of ONT reads (other platforms use SortMeRNA's own database).
 - `params.host_taxon_db` [str]: Path to a TSV mapping host taxon names to taxids (default: [`ref/host-taxa.tsv`](./ref/host-taxa.tsv).
 - `params.host_infection_overrides` [str]: Path to a JSON file of manual per-taxid host-group overrides forcing `MATCH` (status=1) in the annotated virus DB (default: [`ref/host-infection-overrides.json`](./ref/host-infection-overrides.json)). Each entry lists a viral `taxid` and the `hosts` (names from `params.host_taxon_db`) for which it should be force-included; only the listed taxon is marked directly, with descendants and ancestors picking up their statuses through the normal propagation phases (i.e. the override behaves like a direct Virus-Host DB match). The override is applied after `params.viral_taxids_exclude_hard` so includes win on conflict at the override target. Use to repair taxa that upstream Virus-Host DB misses or misannotates. See [`docs/annotation.md`](./annotation.md) for where in the algorithm the override is applied.
 - `params.contaminants` [str]: Path to a local file containing other contaminant genomes to exclude during contaminant filtering (default [`ref/contaminants.fasta.gz`](./ref/contaminants.fasta.gz).

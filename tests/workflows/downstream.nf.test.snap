@@ -1,10 +1,10 @@
 {
     "downstream_output_shortread": {
         "content": [
-            "tt1_bracken.tsv.gz:md5,dcfdd1e797ae4d1dbc4e6c32cc669f99",
+            "tt1_bracken.tsv.gz:md5,5ba1b6e750b98adca5850dfc986eff50",
             "tt1_clade_counts.tsv.gz:md5,86e33dc2a5b63dbf4227c16d9c48517d",
             "tt1_fastp.json:md5,b37cdf709a33210dbd584de5ae061f9c",
-            "tt1_kraken.tsv.gz:md5,a932839292f8edc76f74f1cb4ce67189",
+            "tt1_kraken.tsv.gz:md5,722374f93bdf9a35db7072684bc2abe5",
             "tt1_qc_adapter_stats_cleaned.tsv.gz:md5,70d8f2e6594f9133273459ec89c025a5",
             "tt1_qc_adapter_stats_raw.tsv.gz:md5,70d8f2e6594f9133273459ec89c025a5",
             "tt1_qc_basic_stats_cleaned.tsv.gz:md5,82fb4e0e5c2b68d9a5472aab4b81fd80",
@@ -19,7 +19,7 @@
             "tt1_qc_quality_sequence_stats_raw.tsv.gz:md5,e97cdb22fecd620d22689c0acb9a96a8",
             "tt1_read_counts.tsv.gz:md5,c9ee6bf4ad94ce7fbc24bd4a2d8bee00"
         ],
-        "timestamp": "2026-10-04T00:27:17.373981703",
+        "timestamp": "2026-10-04T00:32:29.257647846",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

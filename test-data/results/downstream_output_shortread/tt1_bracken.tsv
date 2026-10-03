@@ -1,4 +1,5 @@
 name	taxid	rank	kraken2_assigned_reads	added_reads	new_est_reads	fraction_total_reads	sample	ribosomal	group
-Viruses	10239	D	15	0	15	0.60000	tiny_test	FALSE	tt1
-Bacteria	2	D	5	0	5	0.20000	tiny_test	FALSE	tt1
-Eukaryota	2759	D	5	0	5	0.20000	tiny_test	FALSE	tt1
+Bacteria	2	D	3	0	3	1.00000	tiny_test	TRUE	tt1
+Viruses	10239	D	15	0	15	0.68182	tiny_test	FALSE	tt1
+Eukaryota	2759	D	5	0	5	0.22727	tiny_test	FALSE	tt1
+Bacteria	2	D	2	0	2	0.09091	tiny_test	FALSE	tt1
