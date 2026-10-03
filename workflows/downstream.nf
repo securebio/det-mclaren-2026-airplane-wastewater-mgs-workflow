@@ -11,6 +11,7 @@ include { DISCOVER_RUN_OUTPUT } from "../subworkflows/local/discoverRunOutput"
 include { CONCAT_RUN_OUTPUTS_BY_GROUP } from "../subworkflows/local/concatRunOutputsByGroup"
 include { MARK_VIRAL_DUPLICATES } from "../subworkflows/local/markViralDuplicates"
 include { COUNT_READS_PER_CLADE } from "../modules/local/countReadsPerClade"
+include { COPY_FILE as COPY_DUP_HITS } from "../modules/local/copyFile"
 include { COPY_FILE_BARE as COPY_PYPROJECT } from "../modules/local/copyFile"
 include { COPY_FILE_BARE as COPY_INPUT } from "../modules/local/copyFile"
 include { WRITE_SENTINEL_DOWNSTREAM } from "../modules/local/writeSentinelDownstream"
@@ -35,15 +36,16 @@ workflow DOWNSTREAM {
         // Short-read: mark duplicates by sequence similarity among all reads, then count
         // reads per clade. ONT skips both, so its DOWNSTREAM output has no viral hits.
         if (params.platform == "ont") {
+            dup_hits_ch = channel.empty()
             clade_counts_ch = channel.empty()
         }
         else {
             mark_dup_ch = MARK_VIRAL_DUPLICATES(concat_ch.hits, params.sim_dup_max_error_frac)
             clade_counts_ch = COUNT_READS_PER_CLADE(mark_dup_ch.hits, viral_db).output
+            // Viral assignments are not validated with BLAST, so there is no validation_hits
+            // table to carry the duplicate marks; publish the marked hits themselves.
+            dup_hits_ch = COPY_DUP_HITS(mark_dup_ch.hits, "duplicate_marked_hits.tsv.gz")
         }
-        // Viral assignments are not validated with BLAST, so no validation_hits are produced.
-        // The duplicate-marked hits stay in the MARK_SIMILARITY_DUPLICATES and
-        // COUNT_READS_PER_CLADE work directories.
         // Prepare publishing channels
         params_str = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(params))
         params_ch = channel.of(params_str).collectFile(name: "params-downstream.json")
@@ -54,6 +56,7 @@ workflow DOWNSTREAM {
         input_downstream_ch = params_ch.mix(input_file_ch)
         logging_downstream_ch = pyproject_ch
         results_downstream_ch = clade_counts_ch.mix(
+                                    dup_hits_ch,
                                     concat_ch.other,
                                     concat_ch.fastp_json)
 
