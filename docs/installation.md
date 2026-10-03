@@ -63,7 +63,7 @@ Alternatively, you can set `tower.accessToken` in your Nextflow configuration fi
 
 ## 4. Configure Seqera ECR credentials
 
-This pipeline's containers are pulled from a public AWS ECR repository. You need to configure AWS ECR registry credentials in your Seqera account to allow Wave to pull container images.
+This pipeline's containers are pulled from a public AWS ECR repository, except the SortMeRNA image, which is a public Seqera Containers build (`community.wave.seqera.io`). You need to configure AWS ECR registry credentials in your Seqera account to allow Wave to pull container images.
 
 1. Log in to your Seqera Platform account
 2. Navigate to your workspace credentials
@@ -118,6 +118,17 @@ Replace `<BASE_DIR>` with the directory (likely on S3) where you want to store y
 
 Wait for the workflow to run to completion; this is likely to take several hours at least.
 
+### Build the SortMeRNA index
+
+For non-ONT platforms, RUN's ribosomal screen also needs a SortMeRNA index, which the index workflow doesn't build. Build it with the pipeline's SortMeRNA container (this needs Docker; for the full database it took about 30 minutes on 3-4 threads and gives about 4.0 GB of files), then upload the output directory:
+
+```
+REPO_DIR/bin/build_sortmerna_index.sh <SORTMERNA_DIR> 4
+aws s3 sync <SORTMERNA_DIR> <SORTMERNA_S3_PREFIX>/
+```
+
+The index is tied to the SortMeRNA version in `configs/containers.config`; rebuild it if that container changes.
+
 ## 8. Run the pipeline on test data
 
 To confirm that the pipeline works in your hands, we recommend running it on a small test dataset, such as the one provided at `s3://nao-testing/gold-standard-test/raw/`, before running it on larger input data. To do this with our test dataset, follow the instructions below, or do it yourself according to the directions given [here](./usage.md).
@@ -142,7 +153,11 @@ nextflow run REPO_DIR \
   --base_dir <BASE_DIR> \
   --ref_dir <PATH_TO_REF_DIR>/output \
   --platform illumina \
+  --sortmerna_ref <SORTMERNA_S3_PREFIX>/smr_v4.3_sensitive_db.fasta \
+  --sortmerna_index_dir <SORTMERNA_S3_PREFIX>/idx \
   --queue <BATCH_QUEUE_NAME>
 ```
+
+(For ONT, omit the two `--sortmerna_*` parameters.)
 
 Once the pipeline is complete, output and logging files will be available in the `output` subdirectory of the base directory specified in the config file.

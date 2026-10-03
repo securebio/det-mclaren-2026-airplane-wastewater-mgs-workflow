@@ -131,4 +131,4 @@ Main heading represents the folder name, and subheadings describes the tool that
 
 - `virus-genomes-masked.fasta.gz`: FASTA file containing host-infecting viral genomes downloaded from viral Genbank (filtered to remove transgenic, contaminated, or erroneous sequences).
 - `virus-genomes-masked.nucleaze.bin`: Pre-built [Nucleaze](https://github.com/jackdougle/nucleaze) k-mer index over the masked viral genomes, consumed by RUN's viral k-mer screen. Built from the masked viral genomes with human (CHM13) k-mers additionally N-masked out.
-- `ribo-ref-concat.fasta.gz`: Reference database of ribosomal LSU and SSU sequences from SILVA, used by RUN's BBDuk-based ribosomal screen.
+- `ribo-ref-concat.fasta.gz`: Reference database of ribosomal LSU and SSU sequences from SILVA, from which `mm2-ribo-index` is built for ONT's ribosomal screen. Other platforms' ribosomal screen uses a SortMeRNA index built outside the pipeline (`bin/build_sortmerna_index.sh`) instead.

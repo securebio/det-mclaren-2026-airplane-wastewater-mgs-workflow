@@ -1,0 +1,25 @@
+reference: /tmp/sortmerna-ref/ref.fasta
+stats:
+  numseq: 5
+  full_len: 10801
+  part_num: 1
+  seed_win_len: 18
+  background_freq: {A: 0.2434, C: 0.2525, G: 0.3192, T: 0.1849}
+  files:
+    stats: 359
+parts:
+  - part: 0
+    numseq_part: 5
+    seq_part_size: 11678
+    files:
+      bursttrie_0.dat: 2328460
+      pos_0.dat: 116056
+      kmer_0.dat: 1048576
+    kmer:
+      num_nonzero: 6719
+      total_count: 17412
+      max_count: 7
+    pos:
+      num_elements: 7591
+      total_positions: 10711
+      max_positions: 5

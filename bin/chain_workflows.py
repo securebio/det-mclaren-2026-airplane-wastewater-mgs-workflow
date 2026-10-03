@@ -4,6 +4,11 @@ Execute INDEX, RUN, and DOWNSTREAM workflows in sequence.
 
 This script orchestrates the three main workflows, passing outputs from each
 stage as inputs to the next via S3 paths.
+
+RUN on non-ONT platforms also needs params.sortmerna_ref and
+params.sortmerna_index_dir (a SortMeRNA index built by
+bin/build_sortmerna_index.sh), which this script doesn't pass, so it only
+completes for ONT unless those params are added.
 """
 
 ###########

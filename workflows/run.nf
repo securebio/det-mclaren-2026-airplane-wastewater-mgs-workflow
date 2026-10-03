@@ -31,7 +31,7 @@ workflow RUN {
         count_ch = COUNT_READS(samplesheet_ch.samplesheet, samplesheet_ch.single_end)
         subset_ch = SUBSET_TRIM(samplesheet_ch.samplesheet, count_ch.output, samplesheet_ch.single_end, params)
         qc_ch = RUN_QC(subset_ch.subset_reads, subset_ch.trimmed_subset_reads, samplesheet_ch.single_end)
-        def profile_params = params + [min_kmer_fraction: "0.4", k: "27", ribo_suffix: "ribo"]
+        def profile_params = params + [ribo_suffix: "ribo"]
         profile_ch = PROFILE(subset_ch.trimmed_subset_reads, samplesheet_ch.single_end, profile_params)
         // Prepare output streams
         input_log_ch = PREPARE_INPUT_LOGGING(params, compat_ch.index_pyproject_path, compat_ch.pipeline_pyproject_path)

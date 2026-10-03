@@ -6,7 +6,7 @@
 | MODULES AND SUBWORKFLOWS |
 ***************************/
 
-include { BBDUK } from "../../../modules/local/bbduk"
+include { SORTMERNA } from "../../../modules/local/sortmerna"
 include { MINIMAP2 } from "../../../modules/local/minimap2"
 include { TAXONOMY as TAXONOMY_RIBO } from "../../../subworkflows/local/taxonomy"
 include { TAXONOMY as TAXONOMY_NORIBO } from "../../../subworkflows/local/taxonomy"
@@ -25,7 +25,7 @@ workflow PROFILE {
     take:
         reads_ch
         single_end
-        params_map // Uses: min_kmer_fraction, k, ribo_suffix, bracken_threshold, platform, db_download_timeout, ref_dir
+        params_map // Uses: ribo_suffix, bracken_threshold, platform, db_download_timeout, ref_dir, sortmerna_ref, sortmerna_index_dir
     main:
         kraken_db_ch = "${params_map.ref_dir}/results/kraken_db"
         // Separate ribosomal reads
@@ -41,14 +41,16 @@ workflow PROFILE {
             ribo_in = ribo_ch.reads_mapped
             noribo_in = ribo_ch.reads_unmapped
         } else {
-            ribo_path = "${params_map.ref_dir}/results/ribo-ref-concat.fasta.gz"
-            ribo_bbduk_params = single_end.map { v -> [
-                min_kmer_fraction: params_map.min_kmer_fraction,
-                k: params_map.k,
+            // SortMeRNA against a prebuilt index of its standard sensitive database
+            // (bin/build_sortmerna_index.sh); a pair is ribosomal if either mate aligns
+            if (!params_map.sortmerna_ref || !params_map.sortmerna_index_dir) {
+                error "Set params.sortmerna_ref and params.sortmerna_index_dir to a prebuilt SortMeRNA reference and index (see bin/build_sortmerna_index.sh)."
+            }
+            ribo_smr_params = single_end.map { v -> [
                 suffix: params_map.ribo_suffix,
                 interleaved: !v
             ] }
-            ribo_ch = BBDUK(reads_ch, ribo_path, ribo_bbduk_params)
+            ribo_ch = SORTMERNA(reads_ch, params_map.sortmerna_ref, params_map.sortmerna_index_dir, ribo_smr_params)
             ribo_in = ribo_ch.match
             noribo_in = ribo_ch.nomatch
         }

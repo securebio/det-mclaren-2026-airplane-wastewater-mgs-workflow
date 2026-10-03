@@ -1,0 +1,8 @@
+name: sortmerna
+label: sortmerna
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - conda-forge::sortmerna=7.0.0
+  - conda-forge::pigz=2.8

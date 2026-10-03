@@ -44,7 +44,7 @@ These guidelines represent best practices to implement in new code, though some 
         - **Workflow-level singletons** (sentinels, version checks, input logging) use `tag "id=util"`.
         - **Stage-qualified processes** (per-task processes that run multiple times across different pipeline stages, e.g. `MULTIQC_LABELED`, `SUMMARIZE_MULTIQC`) append a `stage=` component, e.g. `tag "id=${sample},stage=${stage_label}"`, so each stage's invocation is distinguishable in the trace.
     - All processes should emit their input (for testing validation); use `ln -s` to link the input to the output.
-    - Most processes have two output channels, `input` and `output`. If a process emits multiple types of output, use meaningful emit names describing the output types (e.g. `match`, `nomatch`, and `log` from `process BBDUK`).
+    - Most processes have two output channels, `input` and `output`. If a process emits multiple types of output, use meaningful emit names describing the output types (e.g. `match`, `nomatch`, and `log` from `process SORTMERNA`).
     - Most, but not all, processes are *labeled* (input is a tuple of a sample name and file path). If input is labeled, output should also be labeled.
 - Naming:
     - Use `lower_snake_case` for variable and channel names.

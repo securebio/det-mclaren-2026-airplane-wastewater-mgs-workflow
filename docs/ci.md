@@ -127,6 +127,9 @@ This approach avoids complex sequencing between workflows while ensuring tests a
 
 Runs the full pipeline on small test data using `bin/chain_workflows.py`, executing INDEX, RUN, and DOWNSTREAM workflows in sequence.
 
+> [!NOTE]
+> `bin/chain_workflows.py` doesn't pass `params.sortmerna_ref` or `params.sortmerna_index_dir`, which RUN needs on non-ONT platforms, so this test and the Illumina benchmark stop at the PROFILE subworkflow unless those params are added.
+
 ### Benchmark tests
 
 These tests run the pipeline on larger benchmark datasets to verify performance and correctness at scale.
