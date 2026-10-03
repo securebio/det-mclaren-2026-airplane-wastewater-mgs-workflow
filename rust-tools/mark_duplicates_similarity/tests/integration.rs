@@ -352,10 +352,64 @@ fn test_multi_level_group_sizes() {
 }
 
 #[test]
-fn test_error_on_missing_column() {
-    // Input missing the required prim_align_dup_exemplar column
+fn test_without_alignment_marking() {
+    // No prim_align_dup_exemplar column: every read is a candidate, and the column is
+    // added with each read as its own exemplar
+    let seq = "ACGT".repeat(20);
+    let qual = "I".repeat(80);
+    let content = format!(
+        "seq_id\tquery_seq\tquery_seq_rev\tquery_qual\tquery_qual_rev\n\
+read1\t{seq}\t{seq}\t{qual}\t{qual}\n\
+read2\t{seq}\t{seq}\t{qual}\t{qual}\n\
+read3\t{other}\t{other}\t{qual}\t{qual}\n",
+        other = "G".repeat(80)
+    );
+
+    let files = TestFiles::new("no_prim_align");
+    files.write_input(&content);
+    let (header, rows) = files.run_and_parse();
+
+    assert_eq!(
+        &header[header.len() - 3..],
+        ["prim_align_dup_exemplar", "sim_dup_exemplar", "sim_dup_group_size"]
+    );
+    for row in &rows {
+        assert_eq!(row["prim_align_dup_exemplar"], row["seq_id"]);
+    }
+    assert_eq!(rows[0]["sim_dup_exemplar"], "read1");
+    assert_eq!(rows[0]["sim_dup_group_size"], "2");
+    assert_eq!(rows[1]["sim_dup_exemplar"], "read1");
+    assert_eq!(rows[1]["sim_dup_group_size"], "NA");
+    assert_eq!(rows[2]["sim_dup_exemplar"], "read3");
+    assert_eq!(rows[2]["sim_dup_group_size"], "1");
+}
+
+#[test]
+fn test_error_on_duplicate_read_id_without_alignment_marking() {
+    // Without a prim_align_dup_exemplar column, every read is a candidate, so a repeated
+    // read ID is an error rather than being silently merged
     let content = "seq_id\tquery_seq\tquery_seq_rev\tquery_qual\tquery_qual_rev\n\
+read1\tACGT\tACGT\tIIII\tIIII\n\
 read1\tACGT\tACGT\tIIII\tIIII\n";
+
+    let files = TestFiles::new("duplicate_id");
+    files.write_input(content);
+
+    let output = files.run();
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("Duplicate read ID in input: read1"),
+        "Expected duplicate read ID error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_error_on_missing_column() {
+    // Input missing the required query_qual_rev column
+    let content = "seq_id\tquery_seq\tquery_seq_rev\tquery_qual\tprim_align_dup_exemplar\n\
+read1\tACGT\tACGT\tIIII\tread1\n";
 
     let files = TestFiles::new("missing_col");
     files.write_input(content);

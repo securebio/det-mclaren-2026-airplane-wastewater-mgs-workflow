@@ -51,15 +51,12 @@ workflow DOWNSTREAM {
                 "sim_dup_exemplar", "sim_dup_group_size"
             ].join(",")
             viral_hits_ch = PAD_ONT_COLUMNS(viral_hits_ch, pad_cols, "NA", "padded").output
-            dup_output_ch = channel.empty()
             clade_counts_ch = channel.empty()
         }
         else {
-            // Short-read: mark duplicates by alignment coordinates, then by sequence
-            // similarity among the reads that survive
-            mark_dup_ch = MARK_VIRAL_DUPLICATES(concat_ch.hits, params.aln_dup_deviation)
+            // Short-read: mark duplicates by sequence similarity among all reads
+            mark_dup_ch = MARK_VIRAL_DUPLICATES(concat_ch.hits)
             viral_hits_ch = mark_dup_ch.hits
-            dup_output_ch = mark_dup_ch.stats
             // Generate clade counts
             clade_counts_ch = COUNT_READS_PER_CLADE(viral_hits_ch, viral_db).output
         }
@@ -75,8 +72,7 @@ workflow DOWNSTREAM {
         // Pre-define publish-channel aggregates so we can both emit them and feed them into the sentinel barrier
         input_downstream_ch = params_ch.mix(input_file_ch)
         logging_downstream_ch = pyproject_ch
-        results_downstream_ch = dup_output_ch.mix(
-                                    clade_counts_ch,
+        results_downstream_ch = clade_counts_ch.mix(
                                     validate_ch.annotated_hits,
                                     concat_ch.other,
                                     concat_ch.fastp_json)

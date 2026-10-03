@@ -8,156 +8,33 @@ nextflow_workflow {
     tag "downstream"
     tag "mark_viral_duplicates"
 
-    test("Should run without failures (deviation = 1)") {
+    test("Should mark similarity duplicates among all reads") {
         tag "expect_success"
         when {
-            params {
-                deviation = 1
-            }
             workflow {
                 '''
-                input[0] = Channel.of(["tt1", "${projectDir}/test-data/markViralDuplicates/tt1_groups.tsv"])
-                    | mix(Channel.of(["tt2", "${projectDir}/test-data/markViralDuplicates/tt2_groups.tsv"]))
-                input[1] = params.deviation
+                input[0] = Channel.of(["tt1", "${projectDir}/test-data/markViralDuplicates/tt1_groups.tsv.gz"])
+                    | mix(Channel.of(["tt2", "${projectDir}/test-data/markViralDuplicates/tt2_groups.tsv.gz"]))
                 '''
             }
         }
         then {
             // Should run without failures
             assert workflow.success
-            // Output should have expected dimensions
-            def tab_in = path(workflow.out.test_in[0][1]).csv(sep: "\t")
-            def tab_out = path(workflow.out.test_align_marked[0][1]).csv(sep: "\t", decompress: true)
-            def tab_meta = path(workflow.out.stats[0][1]).csv(sep: "\t", decompress: true)
-            assert tab_out.rowCount == tab_in.rowCount
-            assert tab_out.columnCount == tab_in.columnCount + 1
-            // Output should have expected headers
-            assert tab_out.columnNames == tab_in.columnNames + ["prim_align_dup_exemplar"]
-            assert tab_meta.columnNames == ["prim_align_genome_id_all", "prim_align_dup_exemplar", "prim_align_dup_count", "prim_align_dup_pairwise_match_frac"]
-            // Output should contain expected sequence IDs
-            assert tab_in.columns["seq_id"].toSorted() == tab_out.columns["seq_id"].toSorted()
-            def line_mapping = tab_out.columns["seq_id"].collect{ element -> tab_in.columns["seq_id"].indexOf(element) }
-            // Old columns should be unchanged
-            for (c in tab_in.columnNames) {
-                assert tab_out.columns[c] == line_mapping.collect{ idx -> tab_in.columns[c][idx] }
-            }
-            // Output stats should be consistent (not checking correctness here)
-            for (r in tab_meta.rows) {
-                def exemplar = r["prim_align_dup_exemplar"]
-                assert exemplar in tab_out.columns["seq_id"] // Exemplar should be a real read
-                assert r["prim_align_dup_count"] == tab_out.columns["prim_align_dup_exemplar"].count(exemplar) // Dup counts should match exemplar assignments
-            }
-            assert tab_meta.columns["prim_align_dup_count"].sum() == tab_out.rowCount
-            // The subworkflow's hits output carries both marking passes; value correctness
-            // for the similarity pass is tested at module level
+            // Output should keep every read, sorted by read ID, with the marking columns added
+            def tab_in = path(workflow.out.test_in[0][1]).csv(sep: "\t", decompress: true)
             def tab_sim = path(workflow.out.hits[0][1]).csv(sep: "\t", decompress: true)
             assert tab_sim.rowCount == tab_in.rowCount
-            assert tab_sim.columnCount == tab_in.columnCount + 3
-            assert "sim_dup_exemplar" in tab_sim.columnNames
-            assert "sim_dup_group_size" in tab_sim.columnNames
-            assert tab_in.columns["seq_id"].toSorted() == tab_sim.columns["seq_id"].toSorted()
-        }
-    }
-
-    test("Should run without failures (deviation = 2)") {
-        tag "expect_success"
-        when {
-            params {
-                deviation = 2
-            }
-            workflow {
-                '''
-                input[0] = Channel.of(["tt1", "${projectDir}/test-data/markViralDuplicates/tt1_groups.tsv"])
-                    | mix(Channel.of(["tt2", "${projectDir}/test-data/markViralDuplicates/tt2_groups.tsv"]))
-                input[1] = params.deviation
-                '''
-            }
-        }
-        then {
-            // Should run without failures
-            assert workflow.success
-            // Output should have expected dimensions
-            def tab_in = path(workflow.out.test_in[0][1]).csv(sep: "\t")
-            def tab_out = path(workflow.out.test_align_marked[0][1]).csv(sep: "\t", decompress: true)
-            def tab_meta = path(workflow.out.stats[0][1]).csv(sep: "\t", decompress: true)
-            assert tab_out.rowCount == tab_in.rowCount
-            assert tab_out.columnCount == tab_in.columnCount + 1
-            // Output should have expected headers
-            assert tab_out.columnNames == tab_in.columnNames + ["prim_align_dup_exemplar"]
-            assert tab_meta.columnNames == ["prim_align_genome_id_all", "prim_align_dup_exemplar", "prim_align_dup_count", "prim_align_dup_pairwise_match_frac"]
-            // Output should contain expected sequence IDs
-            assert tab_in.columns["seq_id"].toSorted() == tab_out.columns["seq_id"].toSorted()
-            def line_mapping = tab_out.columns["seq_id"].collect{ element -> tab_in.columns["seq_id"].indexOf(element) }
-            // Old columns should be unchanged
-            for (c in tab_in.columnNames) {
-                assert tab_out.columns[c] == line_mapping.collect{ idx -> tab_in.columns[c][idx] }
-            }
-            // Output stats should be consistent (not checking correctness here)
-            for (r in tab_meta.rows) {
-                def exemplar = r["prim_align_dup_exemplar"]
-                assert exemplar in tab_out.columns["seq_id"] // Exemplar should be a real read
-                assert r["prim_align_dup_count"] == tab_out.columns["prim_align_dup_exemplar"].count(exemplar) // Dup counts should match exemplar assignments
-            }
-            assert tab_meta.columns["prim_align_dup_count"].sum() == tab_out.rowCount
-            // The subworkflow's hits output carries both marking passes; value correctness
-            // for the similarity pass is tested at module level
-            def tab_sim = path(workflow.out.hits[0][1]).csv(sep: "\t", decompress: true)
-            assert tab_sim.rowCount == tab_in.rowCount
-            assert tab_sim.columnCount == tab_in.columnCount + 3
-            assert "sim_dup_exemplar" in tab_sim.columnNames
-            assert "sim_dup_group_size" in tab_sim.columnNames
-            assert tab_in.columns["seq_id"].toSorted() == tab_sim.columns["seq_id"].toSorted()
-        }
-    }
-
-    test("Should run without failures (deviation = 0)") {
-        tag "expect_success"
-        when {
-            params {
-                deviation = 0
-            }
-            workflow {
-                '''
-                input[0] = Channel.of(["tt1", "${projectDir}/test-data/markViralDuplicates/tt1_groups.tsv"])
-                    | mix(Channel.of(["tt2", "${projectDir}/test-data/markViralDuplicates/tt2_groups.tsv"]))
-                input[1] = params.deviation
-                '''
-            }
-        }
-        then {
-            // Should run without failures
-            assert workflow.success
-            // Output should have expected dimensions
-            def tab_in = path(workflow.out.test_in[0][1]).csv(sep: "\t")
-            def tab_out = path(workflow.out.test_align_marked[0][1]).csv(sep: "\t", decompress: true)
-            def tab_meta = path(workflow.out.stats[0][1]).csv(sep: "\t", decompress: true)
-            assert tab_out.rowCount == tab_in.rowCount
-            assert tab_out.columnCount == tab_in.columnCount + 1
-            // Output should have expected headers
-            assert tab_out.columnNames == tab_in.columnNames + ["prim_align_dup_exemplar"]
-            assert tab_meta.columnNames == ["prim_align_genome_id_all", "prim_align_dup_exemplar", "prim_align_dup_count", "prim_align_dup_pairwise_match_frac"]
-            // Output should contain expected sequence IDs
-            assert tab_in.columns["seq_id"].toSorted() == tab_out.columns["seq_id"].toSorted()
-            def line_mapping = tab_out.columns["seq_id"].collect{ element -> tab_in.columns["seq_id"].indexOf(element) }
-            // Old columns should be unchanged
-            for (c in tab_in.columnNames) {
-                assert tab_out.columns[c] == line_mapping.collect{ idx -> tab_in.columns[c][idx] }
-            }
-            // Output stats should be consistent (not checking correctness here)
-            for (r in tab_meta.rows) {
-                def exemplar = r["prim_align_dup_exemplar"]
-                assert exemplar in tab_out.columns["seq_id"] // Exemplar should be a real read
-                assert r["prim_align_dup_count"] == tab_out.columns["prim_align_dup_exemplar"].count(exemplar) // Dup counts should match exemplar assignments
-            }
-            assert tab_meta.columns["prim_align_dup_count"].sum() == tab_out.rowCount
-            // The subworkflow's hits output carries both marking passes; value correctness
-            // for the similarity pass is tested at module level
-            def tab_sim = path(workflow.out.hits[0][1]).csv(sep: "\t", decompress: true)
-            assert tab_sim.rowCount == tab_in.rowCount
-            assert tab_sim.columnCount == tab_in.columnCount + 3
-            assert "sim_dup_exemplar" in tab_sim.columnNames
-            assert "sim_dup_group_size" in tab_sim.columnNames
-            assert tab_in.columns["seq_id"].toSorted() == tab_sim.columns["seq_id"].toSorted()
+            assert tab_sim.columnNames == tab_in.columnNames + ["prim_align_dup_exemplar", "sim_dup_exemplar", "sim_dup_group_size"]
+            assert tab_sim.columns["seq_id"] == tab_in.columns["seq_id"].toSorted()
+            // Without alignment marking, every read is its own alignment exemplar
+            assert tab_sim.columns["prim_align_dup_exemplar"] == tab_sim.columns["seq_id"]
+            // Exemplars are real reads, and their group sizes sum to the read count
+            def exemplars = tab_sim.columns["sim_dup_exemplar"].toSet()
+            assert tab_sim.columns["seq_id"].toSet().containsAll(exemplars)
+            def sizes = tab_sim.rows.findAll { r -> r["seq_id"] == r["sim_dup_exemplar"] }
+                .collect { r -> r["sim_dup_group_size"] as int }
+            assert sizes.sum() == tab_sim.rowCount
         }
     }
 

@@ -8,7 +8,7 @@ the taxid and all reads that are assigned to the clade descended from the taxid.
 Reads are counted three ways:
 
 - `total` counts every read under its own LCA taxid.
-- `dedup` counts only reads that survive both duplicate-marking passes, under their own LCA taxid.
+- `dedup` counts only reads that are their own similarity exemplar, under their own LCA taxid.
 - `total_by_exemplar` counts every read under the LCA taxid of the exemplar representing it.
 
 Therefore, `dedup / total_by_exemplar` is the per-taxid duplication rate over one coherent set of reads.
@@ -57,7 +57,7 @@ def read_tsv(file_path: str) -> Iterator[dict[str, str]]:
 
 
 def is_duplicate(read: dict[str, str]) -> bool:
-    """Check if a read is a duplicate after both duplicate-marking passes.
+    """Check if a read is a similarity duplicate.
 
     A duplicate read is one where sequence ID != primary similarity exemplar.
 
@@ -319,7 +319,7 @@ def main() -> None:
         )
         print(
             "Required columns for reads file: "
-            "seq_id, prim_align_dup_exemplar, aligner_taxid_lca, group",
+            "seq_id, sim_dup_exemplar, sim_dup_group_size, aligner_taxid_lca, group",
             file=sys.stderr,
         )
         sys.exit(1)
