@@ -55,7 +55,7 @@ workflow DOWNSTREAM {
         }
         else {
             // Short-read: mark duplicates by sequence similarity among all reads
-            mark_dup_ch = MARK_VIRAL_DUPLICATES(concat_ch.hits)
+            mark_dup_ch = MARK_VIRAL_DUPLICATES(concat_ch.hits, params.sim_dup_max_error_frac)
             viral_hits_ch = mark_dup_ch.hits
             // Generate clade counts
             clade_counts_ch = COUNT_READS_PER_CLADE(viral_hits_ch, viral_db).output

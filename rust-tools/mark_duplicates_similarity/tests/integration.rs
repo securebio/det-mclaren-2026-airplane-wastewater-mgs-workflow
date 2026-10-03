@@ -72,6 +72,10 @@ impl TestFiles {
     }
 
     fn run(&self) -> std::process::Output {
+        self.run_with_args(&[])
+    }
+
+    fn run_with_args(&self, extra_args: &[&str]) -> std::process::Output {
         Command::new(binary_path())
             .args([
                 "-i",
@@ -79,12 +83,20 @@ impl TestFiles {
                 "-o",
                 self.output_gz.to_str().unwrap(),
             ])
+            .args(extra_args)
             .output()
             .unwrap()
     }
 
     fn run_and_parse(&self) -> (Vec<String>, Vec<HashMap<String, String>>) {
-        let output = self.run();
+        self.run_and_parse_with_args(&[])
+    }
+
+    fn run_and_parse_with_args(
+        &self,
+        extra_args: &[&str],
+    ) -> (Vec<String>, Vec<HashMap<String, String>>) {
+        let output = self.run_with_args(extra_args);
         assert!(
             output.status.success(),
             "Binary failed: {}",
@@ -382,6 +394,60 @@ read3\t{other}\t{other}\t{qual}\t{qual}\n",
     assert_eq!(rows[1]["sim_dup_group_size"], "NA");
     assert_eq!(rows[2]["sim_dup_exemplar"], "read3");
     assert_eq!(rows[2]["sim_dup_group_size"], "1");
+}
+
+/// Deterministic pseudo-random DNA sequence, so reads have informative minimizers
+fn pseudo_random_seq(len: usize, seed: u64) -> String {
+    let mut state = seed;
+    (0..len)
+        .map(|_| {
+            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            b"ACGT"[(state >> 62) as usize] as char
+        })
+        .collect()
+}
+
+/// Change the bases at the given positions to a different base
+fn with_mismatches(seq: &str, positions: &[usize]) -> String {
+    let mut bases: Vec<u8> = seq.bytes().collect();
+    for &i in positions {
+        bases[i] = if bases[i] == b'A' { b'C' } else { b'A' };
+    }
+    String::from_utf8(bases).unwrap()
+}
+
+#[test]
+fn test_max_error_frac() {
+    // read2 differs from read1 by 2 mismatches in each 100 bp mate: over the default
+    // budget (floor(1% of 100) = 1), within floor(2% of 100) = 2
+    let fwd = pseudo_random_seq(100, 1);
+    let rev = pseudo_random_seq(100, 2);
+    let fwd2 = with_mismatches(&fwd, &[97, 99]);
+    let rev2 = with_mismatches(&rev, &[97, 99]);
+    let qual = "I".repeat(100);
+    let content = format!(
+        "seq_id\tquery_seq\tquery_seq_rev\tquery_qual\tquery_qual_rev\n\
+read1\t{fwd}\t{rev}\t{qual}\t{qual}\n\
+read2\t{fwd2}\t{rev2}\t{qual}\t{qual}\n"
+    );
+
+    let files = TestFiles::new("max_error_frac");
+    files.write_input(&content);
+    let (_header, rows) = files.run_and_parse();
+    assert_eq!(rows[1]["sim_dup_exemplar"], "read2");
+
+    let (_header, rows) = files.run_and_parse_with_args(&["--max-error-frac", "0.02"]);
+    assert_eq!(rows[1]["sim_dup_exemplar"], rows[0]["sim_dup_exemplar"]);
+}
+
+#[test]
+fn test_error_on_invalid_max_error_frac() {
+    let files = TestFiles::new("invalid_max_error_frac");
+    files.write_input(&build_tsv(&[("read1", "ACGT", "IIII", "read1")]));
+    let output = files.run_with_args(&["--max-error-frac", "1.5"]);
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("--max-error-frac"), "got: {}", stderr);
 }
 
 #[test]
