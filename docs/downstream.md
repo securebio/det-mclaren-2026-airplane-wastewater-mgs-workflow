@@ -2,7 +2,7 @@
 
 This page describes the structure and function of the `DOWNSTREAM` workflow. This workflow is responsible for downstream analysis of the outputs of the [`RUN` workflow](./run.md), particularly in cases that require comparisons across reads and/or samples[^comp].
 
-For short-read data, this workflow performs two main analyses: (1) identification and marking of duplicate reads by sequence similarity, and (2) counting the number of reads assigned to viral clades by LCA. Viral taxonomic assignments are not validated with BLAST: the `VALIDATE_VIRAL_ASSIGNMENTS` subworkflow remains in the repository, but DOWNSTREAM doesn't call it, so no `validation_hits` are produced.
+For short-read data, this workflow performs two main analyses: (1) identification and marking of duplicate reads by sequence similarity, and (2) counting the number of reads assigned to viral clades by LCA. Viral taxonomic assignments are not validated with BLAST: the `VALIDATE_VIRAL_ASSIGNMENTS` subworkflow remains in the repository, but DOWNSTREAM doesn't call it, so no `validation_hits` are produced. The duplicate-marked hits, which `validation_hits` used to carry, are published as `{group}_duplicate_marked_hits.tsv.gz`, with the columns of `validation_hits` other than `selected_taxid` and the `validation_*` columns.
 
 For ONT data, the workflow only concatenates the per-sample RUN outputs by group. It publishes no per-read viral hits table (upstream, `validation_hits` was ONT's only one); use the RUN workflow's per-sample `virus_hits` instead.
 
@@ -30,6 +30,7 @@ O --> BR(Bracken TSVs)
 O --> QC(QC stats TSVs)
 O --> FJ(FASTP JSON)
 O --> E[MARK_VIRAL_DUPLICATES]
+E --> J(Duplicate-marked hits TSVs)
 G(Viral taxonomy DB) --> L[COUNT_READS_PER_CLADE]
 E --> L
 L --> M(Clade count TSVs)
@@ -47,6 +48,7 @@ end
 style A fill:#fff,stroke:#000
 style B fill:#fff,stroke:#000
 style G fill:#fff,stroke:#000
+style J fill:#000,color:#fff,stroke:#000
 style M fill:#000,color:#fff,stroke:#000
 style S fill:#000,color:#fff,stroke:#000
 style KR fill:#000,color:#fff,stroke:#000
@@ -125,7 +127,7 @@ style E fill:#000,color:#fff,stroke:#000
 
 This subworkflow takes in partitioned hits tables from `CONCAT_BY_GROUP`, sorts each by read ID, and marks duplicates by sequence similarity among all reads, using minimizer-based clustering via the [nao-dedup](https://github.com/securebio/nao-dedup) library (`MARK_SIMILARITY_DUPLICATES`). Reads are processed in read-ID order. Each read is compared with the founding read of each existing cluster that shares a minimizer with it, and joins the first cluster it matches; a read that matches none founds a new cluster. Once all reads are processed, each cluster's exemplar is its highest-scoring member (by mean base quality, then length; ties go to the earlier read), which need not be the read that founded it. Two read pairs match if both mates match, in either mate orientation, with an offset of up to 1 nt and at most `floor(params.sim_dup_max_error_frac × overlap)` mismatches over each mate's overlap, where an offset also spends one mismatch of that budget. An offset shrinks the overlap too, so it can cost two: with the default of 0.02, a 150 bp mate allows 3 mismatches without an offset but only 1 with a 1 nt offset (overlap 149, budget 2), and a mate of 50–99 bp allows 1 mismatch without an offset, while a 50 bp mate can't match at an offset at all. At nao-dedup's own default of 0.01, a 150 bp mate allows 1 mismatch, so copies of a molecule with two or more sequencing errors in a mate are split off as distinct.
 
-Read IDs must be unique within a group; a repeated ID stops the task with an error. The subworkflow adds `sim_dup_exemplar` (the exemplar of the read's cluster[^exemplar]) and `sim_dup_group_size` (the number of reads in the cluster, given on the exemplar's row only). It also adds `prim_align_dup_exemplar`, set to each read's own ID, so the columns match those of earlier versions.
+Read IDs must be unique within a group; a repeated ID stops the task with an error. The subworkflow adds `sim_dup_exemplar` (the exemplar of the read's cluster[^exemplar]) and `sim_dup_group_size` (the number of reads in the cluster, given on the exemplar's row only). It also adds `prim_align_dup_exemplar`, set to each read's own ID, so the columns match those of earlier versions. The result is published as `{group}_duplicate_marked_hits.tsv.gz` (schema: `schemas/duplicate_marked_hits.schema.json`), and is the table `COUNT_READS_PER_CLADE` counts from.
 
 Duplicates are not marked by alignment coordinates. Earlier versions first grouped reads whose mates had the same Bowtie2 5′ coordinates (within 1 nt) and marked similarity duplicates only among the reads that survived. That pass merged distinct molecules that happened to share coordinates, and its grouping is quadratic in the depth of a stack of reads at identical coordinates, which could keep a group with millions of hits on one short genome from finishing.
 

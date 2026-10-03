@@ -136,6 +136,10 @@ nextflow_pipeline {
             assert lines.size() == 1
             def schema = new groovy.json.JsonSlurper().parse(new File("${projectDir}/schemas/clade_counts.schema.json"))
             assert lines[0].split("\t") as List == schema.fields.collect { it.name }
+            def hits_lines = path("${launchDir}/output/results_downstream/empty_group_duplicate_marked_hits.tsv.gz").linesGzip
+            assert hits_lines.size() == 1
+            def hits_schema = new groovy.json.JsonSlurper().parse(new File("${projectDir}/schemas/duplicate_marked_hits.schema.json"))
+            assert hits_lines[0].split("\t") as List == hits_schema.fields.collect { it.name }
             assertSentinelValid("${launchDir}/output", "empty_group")
             assertTraceTagsValid("${launchDir}")
         }
