@@ -141,7 +141,6 @@ expected-outputs-downstream = [
     "results_downstream/{GROUP}_qc_quality_sequence_stats_cleaned.tsv.gz",
     "results_downstream/{GROUP}_qc_quality_sequence_stats_raw.tsv.gz",
     "results_downstream/{GROUP}_read_counts.tsv.gz",
-    "results_downstream/{GROUP}_validation_hits.tsv.gz",
 ]
 
 expected-outputs-downstream-ont = [
@@ -163,5 +162,4 @@ expected-outputs-downstream-ont = [
     "results_downstream/{GROUP}_qc_quality_sequence_stats_cleaned.tsv.gz",
     "results_downstream/{GROUP}_qc_quality_sequence_stats_raw.tsv.gz",
     "results_downstream/{GROUP}_read_counts.tsv.gz",
-    "results_downstream/{GROUP}_validation_hits.tsv.gz",
 ]

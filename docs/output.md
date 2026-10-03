@@ -105,7 +105,7 @@ Main heading represents the folder name, and subheadings describes the tool that
 
 #### BLAST
 
-- `blast_db`: Directory containing the extracted BLAST database volume files, exposed under a constant `blast_db` alias (a `blast_db.nal` built with `blastdb_aliastool`) so consumers reference a fixed path regardless of which database (e.g. `core_nt`) was downloaded.
+- `blast_db`: Not used by RUN or DOWNSTREAM in this version (only by the uncalled `VALIDATE_VIRAL_ASSIGNMENTS` subworkflow). Directory containing the extracted BLAST database volume files, exposed under a constant `blast_db` alias (a `blast_db.nal` built with `blastdb_aliastool`) so consumers reference a fixed path regardless of which database (e.g. `core_nt`) was downloaded.
 
 #### Bowtie2
 
