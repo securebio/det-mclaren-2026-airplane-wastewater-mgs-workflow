@@ -15,6 +15,7 @@ nextflow_workflow {
                 '''
                 input[0] = Channel.of(["tt1", "${projectDir}/test-data/markViralDuplicates/tt1_groups.tsv.gz"])
                     | mix(Channel.of(["tt2", "${projectDir}/test-data/markViralDuplicates/tt2_groups.tsv.gz"]))
+                input[1] = 0.02
                 '''
             }
         }

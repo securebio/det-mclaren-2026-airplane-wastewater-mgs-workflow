@@ -28,6 +28,10 @@ struct Args {
     /// Output gzipped TSV file path
     #[arg(short, long)]
     output: String,
+    /// Mismatches allowed per mate, as a fraction of the mates' overlap (rounded down);
+    /// an offset between mates spends this budget too, and also shrinks the overlap
+    #[arg(long, default_value_t = DedupParams::default().max_error_frac)]
+    max_error_frac: f64,
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -50,10 +54,20 @@ fn main() -> Result<()> {
     let input_path = &args.input;
     let output_path = &args.output;
 
+    if !(0.0..1.0).contains(&args.max_error_frac) {
+        bail!(
+            "--max-error-frac must be at least 0 and less than 1, got {}",
+            args.max_error_frac
+        );
+    }
+
     let start_time = Instant::now();
 
-    // Create deduplication context with default parameters
-    let dedup_params = DedupParams::default();
+    // Create deduplication context with default parameters, apart from the error budget
+    let dedup_params = DedupParams {
+        max_error_frac: args.max_error_frac,
+        ..DedupParams::default()
+    };
     let minimizer_params = MinimizerParams::default();
     let mut ctx = DedupContext::new(dedup_params, minimizer_params);
 

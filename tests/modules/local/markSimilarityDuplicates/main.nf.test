@@ -30,6 +30,7 @@ nextflow_process {
             process {
                 '''
                 input[0] = GZIP_FILE.out
+                input[1] = 0.02
                 '''
             }
         }
@@ -80,6 +81,7 @@ nextflow_process {
             process {
                 '''
                 input[0] = GZIP_FILE.out
+                input[1] = 0.02
                 '''
             }
         }
@@ -92,6 +94,67 @@ nextflow_process {
             def header = lines[0].split("\t") as List
             assert "sim_dup_exemplar" in header
             assert "sim_dup_group_size" in header
+        }
+    }
+
+    // test_input_budget.tsv: read2 differs from read1 by 2 mismatches in each 100 bp mate,
+    // over a 1% budget (floor(1% of 100) = 1) and within a 2% budget (2). It has no
+    // prim_align_dup_exemplar column, as in DOWNSTREAM, so both reads are candidates.
+    test("Should keep reads apart when they differ by more than the budget") {
+        tag "expect_success"
+        setup {
+            run("GZIP_FILE") {
+                script "modules/local/gzipFile/main.nf"
+                process {
+                    '''
+                    input[0] = Channel.of("test")
+                        | combine(Channel.of("${projectDir}/test-data/markSimilarityDuplicates/test_input_budget.tsv"))
+                    '''
+                }
+            }
+        }
+        when {
+            process {
+                '''
+                input[0] = GZIP_FILE.out
+                input[1] = 0.01
+                '''
+            }
+        }
+        then {
+            assert process.success
+            def tab_out = path(process.out.output[0][1]).csv(sep: "\t", decompress: true)
+            assert tab_out.columns["sim_dup_exemplar"] == ["read1", "read2"]
+        }
+    }
+
+    test("Should mark reads as duplicates when they differ by no more than the budget") {
+        tag "expect_success"
+        setup {
+            run("GZIP_FILE") {
+                script "modules/local/gzipFile/main.nf"
+                process {
+                    '''
+                    input[0] = Channel.of("test")
+                        | combine(Channel.of("${projectDir}/test-data/markSimilarityDuplicates/test_input_budget.tsv"))
+                    '''
+                }
+            }
+        }
+        when {
+            process {
+                '''
+                input[0] = GZIP_FILE.out
+                input[1] = 0.02
+                '''
+            }
+        }
+        then {
+            assert process.success
+            def tab_out = path(process.out.output[0][1]).csv(sep: "\t", decompress: true)
+            // Equal quality and length, so the earlier read is the exemplar
+            assert tab_out.columns["sim_dup_exemplar"] == ["read1", "read1"]
+            assert tab_out.columns["sim_dup_group_size"] == [2, null] // csv parsing types the values
         }
     }
 
