@@ -2,7 +2,7 @@
 
 This page describes the structure and function of the `DOWNSTREAM` workflow. This workflow is responsible for downstream analysis of the outputs of the [`RUN` workflow](./run.md), particularly in cases that require comparisons across reads and/or samples[^comp].
 
-For short-read data, this workflow performs three main analyses: (1) identification and marking of duplicate reads, first from their Bowtie2 alignment coordinates and then by sequence similarity among the reads that survive, (2) validation of viral taxonomic assignments using BLAST against the NCBI core_nt database, and (3) counting the number of reads assigned to viral clades by LCA.
+For short-read data, this workflow performs three main analyses: (1) identification and marking of duplicate reads by sequence similarity, (2) validation of viral taxonomic assignments using BLAST against the NCBI core_nt database, and (3) counting the number of reads assigned to viral clades by LCA.
 
 For ONT data, the workflow only performs (1) validation of viral taxonomic assignments using BLAST against the NCBI core_nt database.
 
@@ -31,7 +31,6 @@ O --> QC(QC stats TSVs)
 O --> FJ(FASTP JSON)
 O --> E[MARK_VIRAL_DUPLICATES]
 E --> J(Annotated hits TSVs)
-E --> K(Summary TSVs)
 E --> F[VALIDATE_VIRAL_ASSIGNMENTS]
 G(Viral taxonomy DB) --> F
 F --> H(Validation hits TSV)
@@ -57,7 +56,6 @@ style B fill:#fff,stroke:#000
 style G fill:#fff,stroke:#000
 style H fill:#000,color:#fff,stroke:#000
 style J fill:#000,color:#fff,stroke:#000
-style K fill:#000,color:#fff,stroke:#000
 style M fill:#000,color:#fff,stroke:#000
 style S fill:#000,color:#fff,stroke:#000
 style KR fill:#000,color:#fff,stroke:#000
@@ -142,22 +140,13 @@ style E fill:#000,color:#fff,stroke:#000
 > [!NOTE]
 > This subworkflow is only executed for short-read platforms. ONT processing skips this step.
 
-This subworkflow takes in partitioned hits tables from `CONCAT_BY_GROUP`, then marks duplicates in two passes: by alignment coordinates, then by sequence similarity among the reads that survive.
+This subworkflow takes in partitioned hits tables from `CONCAT_BY_GROUP`, sorts each by read ID, and marks duplicates by sequence similarity among all reads, using minimizer-based clustering via the [nao-dedup](https://github.com/securebio/nao-dedup) library (`MARK_SIMILARITY_DUPLICATES`). Reads are processed in read-ID order. Each read is compared with the founding read of each existing cluster that shares a minimizer with it, and joins the first cluster it matches; a read that matches none founds a new cluster. Once all reads are processed, each cluster's exemplar is its highest-scoring member (by mean base quality, then length; ties go to the earlier read), which need not be the read that founded it. Two read pairs match if both mates match, in either mate orientation, with an offset of up to 1 nt and a limited number of mismatches over each mate's overlap.
 
-**Alignment-based marking** identifies duplicate reads on the basis of their assigned genome ID, the unclipped 5′ coordinate of each aligned mate, and the strand each mate aligned to, all as determined by Bowtie2 in the `RUN` workflow.
+Read IDs must be unique within a group; a repeated ID stops the task with an error. The subworkflow adds `sim_dup_exemplar` (the exemplar of the read's cluster[^exemplar]) and `sim_dup_group_size` (the number of reads in the cluster, given on the exemplar's row only). It also adds `prim_align_dup_exemplar`, set to each read's own ID, so the columns match those of earlier versions.
 
-In order to be considered duplicates, two read pairs must be mapped to the same genome ID with both mates on the same strands and both mates' 5′ coordinates within a user-specified distance of each other (default 1 nt). The fuzzy coordinate matching allows for the identification of duplicate reads in the presence of small read errors, alignment errors or overzealous adapter trimming; the strand comparison separates molecules that occupy one span in opposite orientations, which coordinates alone cannot.
-
-Reads are only compared against reads of the same kind. A pair whose mates aligned to one genome on opposite strands (FR or RF), a pair whose mates aligned on the same strand (FF or RR), a pair split across two genomes, and a read with one mate unaligned will never be marked as duplicates of each other. This differs from `samtools markdup`, where a read with one mate unaligned could be marked as a duplicate of a complete pair. A read with neither mate aligned has no coordinates and is never a duplicate of anything.
-
-For each group of reads identified as duplicates, the algorithm selects the read pair with the highest average quality score to act as the "exemplar" of the group. Each read in the group is annotated with this examplar in `prim_align_dup_exemplar` to identify its duplicate group[^exemplar], enabling downstream deduplication or other duplicate analyses if needed. In addition to an annotated hits TSV containing an additional column for exemplar IDs, the subworkflow also returns a summary TSV giving the number of reads mapped to a given exemplar ID, as well as the fraction of read pairs in the group that are pairwise duplicates[^pairwise].
-
-**Similarity-based marking** then groups the alignment-unique reads by sequence similarity, using minimizer-based clustering via the [nao-dedup](https://github.com/securebio/nao-dedup) library. It adds `sim_dup_exemplar` and `sim_dup_group_size` (the number of reads that exemplar stands for, including its group members' alignment duplicates).
-
-Both sets of columns are carried through validation into `{group}_validation_hits.tsv.gz`.
+Duplicates are not marked by alignment coordinates. Earlier versions first grouped reads whose mates had the same Bowtie2 5′ coordinates (within 1 nt) and marked similarity duplicates only among the reads that survived. That pass merged distinct molecules that happened to share coordinates, and its grouping is quadratic in the depth of a stack of reads at identical coordinates, which could keep a group with millions of hits on one short genome from finishing.
 
 [^exemplar]: A read with no duplicates will be annotated with itself as the exemplar.
-[^pairwise]: Because of the fuzzy matching used to identify duplicates, it is possible for duplicate annotation to be intransitive: i.e. read A is a duplicate of read B, and read B is a duplicate of read C, but read A is not a duplicate of read C. As currently implemented, the algorithm will group a read into a duplicate group if it matches any single read already in that duplicate group, potentially leading to the grouping of reads that would not be considered duplicates of each other in isolation. The reporting of the pairwise duplicate statistic in the summary file allows for quantification of this phenomenon, and potential adjustment of parameters if too high a fraction of non-matching reads are being grouped together in this way.
 
 ```mermaid
 ---
@@ -166,14 +155,10 @@ config:
   layout: horizontal
 ---
 flowchart LR
-A("Partitioned sample group TSVs <br> (CONCAT_BY_GROUP)") --> B[MARK_ALIGNMENT_DUPLICATES]
-B --> C[SORT_TSV]
-B --> D[SORT_TSV]
+A("Partitioned sample group TSVs <br> (CONCAT_BY_GROUP)") --> C[SORT_TSV]
 C --> E[MARK_SIMILARITY_DUPLICATES]
-D --> F(Summary TSVs)
 E --> G(Duplicate-annotated hits TSVs)
 style A fill:#fff,stroke:#000
-style F fill:#000,color:#fff,stroke:#000
 style G fill:#000,color:#fff,stroke:#000
 ```
 
@@ -184,7 +169,7 @@ Once duplicates are marked, each read can be thought of as having two assignment
 - The read's own aligner LCA, in `aligner_taxid_lca`, or
 - The aligner LCA of the exemplar representing it.
 
-Generally these two taxids agree. However, alignment-based marking keys on the aligner's primary genome ID and similarity-based marking on the read sequence itself, neither of which is directly tied to `aligner_taxid_lca`, which is derived from all of a read's alignments. A duplicate group can therefore span multiple `aligner_taxid_lca` values, or even multiple `selected_taxid` values, which means a read can be partitioned separately from its exemplar during validation. In the extreme, a `selected_taxid` partition can contain nothing but duplicate reads whose exemplars all fall in other partitions. That partition is then not validated at all: its reads' exemplars are eligible for validation where they landed, but nothing guarantees they are sampled.
+Generally these two taxids agree. However, similarity-based marking keys on the read sequence itself, which is not directly tied to `aligner_taxid_lca`, which is derived from all of a read's alignments. A duplicate group can therefore span multiple `aligner_taxid_lca` values, or even multiple `selected_taxid` values, which means a read can be partitioned separately from its exemplar during validation. In the extreme, a `selected_taxid` partition can contain nothing but duplicate reads whose exemplars all fall in other partitions. That partition is then not validated at all: its reads' exemplars are eligible for validation where they landed, but nothing guarantees they are sampled.
 
 ### Validate viral taxonomic assignments (`VALIDATE_VIRAL_ASSIGNMENTS`)
 
@@ -192,7 +177,7 @@ This subworkflow uses BLAST to validate the taxonomic assignments given to putat
 
 - Takes in annotated hits TSVs from `MARK_VIRAL_DUPLICATES`
 - Splits the data by the assigned taxid at the species level if the LCA assignment is at or below that level; otherwise, splits by the raw LCA taxid. This result is the taxid group, recorded in the output as `selected_taxid`.
-- Downsamples each taxid group to at most `params.validation_n_sample` reads, drawing only from reads that survived both duplicate-marking passes (`seq_id == sim_dup_exemplar`), since a read that duplicates another adds no evidence about its species. ONT skips duplicate marking, so every read stays eligible there. This has a consequence for taxa whose duplicate groups span more than one assignment, described in [Read assignments after duplicate marking](#read-assignments-after-duplicate-marking).
+- Downsamples each taxid group to at most `params.validation_n_sample` reads, drawing only from similarity exemplars (`seq_id == sim_dup_exemplar`), since a read that duplicates another adds no evidence about its species. ONT skips duplicate marking, so every read stays eligible there. This has a consequence for taxa whose duplicate groups span more than one assignment, described in [Read assignments after duplicate marking](#read-assignments-after-duplicate-marking).
 - Aligns the retained reads against the NCBI core_nt database with BLAST
 - Filters BLAST hits by bitscore and calculates the [lowest common ancestor (LCA)](https://en.wikipedia.org/wiki/Lowest_common_ancestor) of remaining hits
 - Calculates the taxonomic distance between each BLAST LCA assignment and the corresponding raw assignment from the RUN workflow
@@ -272,7 +257,7 @@ It outputs a TSV for each sample group (`<group>_clade_counts.tsv.gz`) with nine
 2. `taxid`: the taxid for the row
 3. `parent_taxid`: the taxid of the row taxid's phylogenetic parent
 4. `reads_direct_total`: the number of reads directly assigned to the taxid without deduplication
-5. `reads_direct_dedup`: the number of reads directly assigned with deduplication, which excludes duplicates found by either marking pass (`seq_id == sim_dup_exemplar`)
+5. `reads_direct_dedup`: the number of reads directly assigned with deduplication, which excludes similarity duplicates (`seq_id == sim_dup_exemplar`)
 6. `reads_direct_total_by_exemplar`: as `reads_direct_total`, but counting each read under the taxid of the exemplar representing it rather than its own
 7. `reads_clade_total`: the number of reads assigned to the clade descended from the taxid (including the directly assigned reads) without deduplication
 8. `reads_clade_dedup`: the number of reads assigned to the clade with deduplication
@@ -309,7 +294,6 @@ To run the `DOWNSTREAM` workflow, you need:
     - The input file (`params.input_file`);
     - The base directory in which to put the working and output directories (`params.base_dir`);
     - The reference directory containing databases and indices (`params.ref_dir`);
-    - The permitted deviation when identifying alignment duplicates (`params.aln_dup_deviation`); **Note: Only used for short-read platforms**
     - Parameter for downsampling during validation:
         - `params.validation_n_sample`: Maximum reads per selected taxid to validate (default 20 for non-ONT platforms, 1000000 for ONT[^max_sample]).
     - Parameters for BLAST validation:
