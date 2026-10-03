@@ -15,7 +15,9 @@ process FASTP {
         tuple val(sample), path("${sample}_fastp_in.fastq.gz"), emit: input
     script:
         /* FASTP cleaning operations:
-        * Sliding window trimming with quality threshold;
+        * Sliding window trimming with quality threshold, from the 3' end only, so reads
+        *   keep their 5' ends (including leading Ns) and duplicate copies of a molecule keep
+        *   a shared start;
         * Removing poly-X tails;
         * Automatic adapter detection;
         * Base correction in overlapping paired-end reads;
@@ -28,7 +30,7 @@ process FASTP {
         def oh = "${sample}_fastp.html"
         def ad = adapters
         def io = "--failed_out ${of} --html ${oh} --json ${oj} --adapter_fasta ${ad} --stdin --stdout ${interleaved ? '--interleaved_in' : ''}"
-        def par = "--cut_front --cut_tail --correction --detect_adapter_for_pe --trim_poly_x --cut_mean_quality 20 --average_qual 20 --qualified_quality_phred 20 --verbose --dont_eval_duplication --thread ${task.cpus} --low_complexity_filter --length_required 35"
+        def par = "--cut_tail --correction --detect_adapter_for_pe --trim_poly_x --cut_mean_quality 20 --average_qual 20 --qualified_quality_phred 20 --verbose --dont_eval_duplication --thread ${task.cpus} --low_complexity_filter --length_required 35"
         def of_trimmed = of - ~/.gz$/
         def op_trimmed = op - ~/.gz$/
         """
