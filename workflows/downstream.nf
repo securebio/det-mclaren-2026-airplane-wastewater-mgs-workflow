@@ -10,12 +10,9 @@ include { LOAD_DOWNSTREAM_DATA } from "../subworkflows/local/loadDownstreamData"
 include { DISCOVER_RUN_OUTPUT } from "../subworkflows/local/discoverRunOutput"
 include { CONCAT_RUN_OUTPUTS_BY_GROUP } from "../subworkflows/local/concatRunOutputsByGroup"
 include { MARK_VIRAL_DUPLICATES } from "../subworkflows/local/markViralDuplicates"
-include { VALIDATE_VIRAL_ASSIGNMENTS } from "../subworkflows/local/validateViralAssignments"
 include { COUNT_READS_PER_CLADE } from "../modules/local/countReadsPerClade"
 include { COPY_FILE_BARE as COPY_PYPROJECT } from "../modules/local/copyFile"
 include { COPY_FILE_BARE as COPY_INPUT } from "../modules/local/copyFile"
-include { SORT_TSV as SORT_ONT_HITS } from "../modules/local/sortTsv"
-include { ADD_FIXED_COLUMN as PAD_ONT_COLUMNS } from "../modules/local/addFixedColumn"
 include { WRITE_SENTINEL_DOWNSTREAM } from "../modules/local/writeSentinelDownstream"
 
 /*****************
@@ -32,37 +29,21 @@ workflow DOWNSTREAM {
         discover_ch = DISCOVER_RUN_OUTPUT(load_ch.run_dirs, load_ch.groups, pipeline_pyproject_path, params.platform).output
         // Concatenate per-sample outputs into per-group TSVs
         concat_ch = CONCAT_RUN_OUTPUTS_BY_GROUP(discover_ch)
-        // Prepare inputs for clade counting and validating taxonomic assignments
+        // Prepare inputs for clade counting
         viral_db_path = "${params.ref_dir}/results/total-virus-db-annotated.tsv.gz"
         viral_db = channel.value(viral_db_path)
-        // Conditionally mark duplicates and generate clade counts based on platform
+        // Short-read: mark duplicates by sequence similarity among all reads, then count
+        // reads per clade. ONT skips both, so its DOWNSTREAM output has no viral hits.
         if (params.platform == "ont") {
-            // ONT: Skip duplicate marking and clade counting, but still sort by seq_id
-            viral_hits_ch = SORT_ONT_HITS(concat_ch.hits, "seq_id").sorted
-            // Pad with paired-end columns (NA) so ONT and short-read share the same column set
-            def pad_cols = [
-                "query_len_rev", "query_seq_rev", "query_qual_rev",
-                "prim_align_fragment_length",
-                "prim_align_best_alignment_score_rev",
-                "prim_align_edit_distance_rev",
-                "prim_align_ref_start_rev", "prim_align_ref_start_unclipped_rev",
-                "prim_align_ref_end_unclipped_rev", "prim_align_query_rc_rev",
-                "prim_align_pair_status", "prim_align_dup_exemplar",
-                "sim_dup_exemplar", "sim_dup_group_size"
-            ].join(",")
-            viral_hits_ch = PAD_ONT_COLUMNS(viral_hits_ch, pad_cols, "NA", "padded").output
             clade_counts_ch = channel.empty()
         }
         else {
-            // Short-read: mark duplicates by sequence similarity among all reads
             mark_dup_ch = MARK_VIRAL_DUPLICATES(concat_ch.hits, params.sim_dup_max_error_frac)
-            viral_hits_ch = mark_dup_ch.hits
-            // Generate clade counts
-            clade_counts_ch = COUNT_READS_PER_CLADE(viral_hits_ch, viral_db).output
+            clade_counts_ch = COUNT_READS_PER_CLADE(mark_dup_ch.hits, viral_db).output
         }
-        // Validate taxonomic assignments
-        def validation_params = params.collectEntries { k, v -> [k, v] }
-        validate_ch = VALIDATE_VIRAL_ASSIGNMENTS(viral_hits_ch, viral_db, params.ref_dir, validation_params)
+        // Viral assignments are not validated with BLAST, so no validation_hits are produced.
+        // The duplicate-marked hits stay in the MARK_SIMILARITY_DUPLICATES and
+        // COUNT_READS_PER_CLADE work directories.
         // Prepare publishing channels
         params_str = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(params))
         params_ch = channel.of(params_str).collectFile(name: "params-downstream.json")
@@ -73,7 +54,6 @@ workflow DOWNSTREAM {
         input_downstream_ch = params_ch.mix(input_file_ch)
         logging_downstream_ch = pyproject_ch
         results_downstream_ch = clade_counts_ch.mix(
-                                    validate_ch.annotated_hits,
                                     concat_ch.other,
                                     concat_ch.fastp_json)
 
@@ -92,7 +72,7 @@ workflow DOWNSTREAM {
     emit:
         input_downstream = input_downstream_ch
         logging_downstream = logging_downstream_ch
-        intermediates_downstream = validate_ch.blast_results
+        intermediates_downstream = channel.empty()
         results_downstream = results_downstream_ch
         experimental_downstream = channel.empty()
         sentinel_downstream = sentinel_ch.sentinel
