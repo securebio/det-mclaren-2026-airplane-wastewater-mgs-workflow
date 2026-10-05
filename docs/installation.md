@@ -63,7 +63,7 @@ Alternatively, you can set `tower.accessToken` in your Nextflow configuration fi
 
 ## 4. Configure Seqera ECR credentials
 
-This pipeline's containers are pulled from a public AWS ECR repository, except the SortMeRNA image, which is a public Seqera Containers build (`community.wave.seqera.io`). You need to configure AWS ECR registry credentials in your Seqera account to allow Wave to pull container images.
+This pipeline's containers are pulled from a public AWS ECR repository, except the SortMeRNA and Kraken2 images, which are public Seqera Containers builds (`community.wave.seqera.io`). You need to configure AWS ECR registry credentials in your Seqera account to allow Wave to pull container images.
 
 1. Log in to your Seqera Platform account
 2. Navigate to your workspace credentials

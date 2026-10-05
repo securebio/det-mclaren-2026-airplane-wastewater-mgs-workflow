@@ -3,7 +3,7 @@
         "content": [
             "tiny_test_bracken.tsv.gz:md5,8359be94b0ab27c9123d0949c2b6fede",
             "tiny_test_fastp.json:md5,316574f4341eff3a6e6125d0d1510af6",
-            "tiny_test_kraken.tsv.gz:md5,54004c2ac1790934d6e9a35bbcf37a11",
+            "tiny_test_kraken.tsv.gz:md5,8742549bb8654917c67829ae350aa0b9",
             "tiny_test_qc_adapter_stats_cleaned.tsv.gz:md5,d15e65d588573c8ccb2687414e37f905",
             "tiny_test_qc_adapter_stats_raw.tsv.gz:md5,d15e65d588573c8ccb2687414e37f905",
             "tiny_test_qc_basic_stats_cleaned.tsv.gz:md5,ebf796e994bdae153e5e3a2aa0327127",
@@ -19,7 +19,7 @@
             "tiny_test_read_counts.tsv:md5,c00f00d8a47a87731a969636e6043b15",
             "tiny_test_virus_hits.tsv.gz:md5,301414b3f6db5fbaaec6a9193706d109"
         ],
-        "timestamp": "2026-10-03T22:52:35.818713714",
+        "timestamp": "2026-10-05T21:03:14.942261373",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -28,7 +28,7 @@
     "run_output_ont": {
         "content": [
             "tiny_test_bracken.tsv.gz:md5,7fbf9af7ae2074266d5f0be4f1b2a184",
-            "tiny_test_kraken.tsv.gz:md5,cce4f37145ef2a1d04ad478078b9c2ea",
+            "tiny_test_kraken.tsv.gz:md5,1a0ddf7e58d7c685b5bfa8698d03d9b4",
             "tiny_test_qc_adapter_stats_cleaned.tsv.gz:md5,d15e65d588573c8ccb2687414e37f905",
             "tiny_test_qc_adapter_stats_raw.tsv.gz:md5,d15e65d588573c8ccb2687414e37f905",
             "tiny_test_qc_basic_stats_cleaned.tsv.gz:md5,9c836e9aee69a3dfb4c80b194cf9086f",
@@ -44,7 +44,7 @@
             "tiny_test_read_counts.tsv:md5,7d44efe7dc906747a465ca537cde237f",
             "tiny_test_virus_hits.tsv.gz:md5,025f933475f6c45dbe4b0a3f7c1c1dd2"
         ],
-        "timestamp": "2026-09-10T18:55:52.991594369",
+        "timestamp": "2026-10-05T21:04:08.733065192",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

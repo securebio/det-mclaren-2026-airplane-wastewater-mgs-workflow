@@ -42,7 +42,7 @@
     {
       "name": "n_minimizers_total",
       "title": "Total Minimizers",
-      "description": "Total number of minimizers associated with this taxon.",
+      "description": "Total number of minimizers associated with this taxon, counted once per k-mer: a minimizer shared by consecutive k-mers of a read counts once for each. Kraken2 versions before 2.17.2 counted each run of consecutive identical minimizers once, giving lower values.",
       "type": "integer",
       "constraints": {
         "required": true,
@@ -64,7 +64,7 @@
     {
       "name": "rank",
       "title": "Taxonomic Rank",
-      "description": "Taxonomic rank code (e.g. R for root, D for domain, S for species).",
+      "description": "Taxonomic rank code (e.g. R for root, D for domain, S for species). Nodes at ranks other than domain, kingdom, phylum, class, order, family, genus and species take the code of their nearest coded ancestor plus their depth below it (e.g. R1 for Viruses in the current NCBI taxonomy, D1 for nodes just below a domain).",
       "type": "string",
       "constraints": {
         "required": true,

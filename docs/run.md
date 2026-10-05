@@ -286,7 +286,7 @@ style I fill:#000,color:#fff,stroke:#000
 
 ### Taxonomic profiling (PROFILE)
 
-The goal of this subworkflow is to give an overview of the taxonomic composition of the cleaned and subset reads from the preprocessing phase. In particular, it gives an estimate of (a) the fraction of ribosomal reads in the dataset, (b) the taxonomic breakdown of the dataset at the domain level[^eukarya], and (c) more detailed abundance estimates for lower-level taxa.
+The goal of this subworkflow is to give an overview of the taxonomic composition of the cleaned and subset reads from the preprocessing phase. In particular, it gives an estimate of (a) the fraction of ribosomal reads in the dataset, (b) the taxonomic breakdown of the dataset at the domain level[^eukarya], and (c) more detailed abundance estimates for lower-level taxa. With a Kraken2 database built from the current NCBI taxonomy, such as the default PlusPF release, the Bracken output covers Bacteria, Archaea and Eukaryota, the three domains: since NCBI's 2025 rank changes, Viruses has the rank "acellular root", which Kraken2 reports as unranked (`R1`), so viral reads appear in the Kraken reports but not in the Bracken output. Bracken's `fraction_total_reads` is therefore a fraction of the reads assigned to those three domains, not of all reads.
 
 ```mermaid
 ---
