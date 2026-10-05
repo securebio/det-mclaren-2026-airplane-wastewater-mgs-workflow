@@ -1,12 +1,12 @@
 pc_reads_total	n_reads_clade	n_reads_direct	n_minimizers_total	n_minimizers_distinct	rank	taxid	name	sample	ribosomal
-100.00	3	0	125	86	R	1	root	tiny_test	TRUE
-100.00	3	0	125	86	D	2	  Bacteria	tiny_test	TRUE
-100.00	3	3	125	86	S	1423	    Bacillus subtilis	tiny_test	TRUE
-100.00	22	0	790	488	R	1	root	tiny_test	FALSE
-68.18	15	0	550	308	D	10239	  Viruses	tiny_test	FALSE
-45.45	10	10	373	190	S	12475	    Hepatitis delta virus	tiny_test	FALSE
-22.73	5	5	177	118	S	10665	    Enterobacteria phage T4	tiny_test	FALSE
-22.73	5	0	158	103	D	2759	  Eukaryota	tiny_test	FALSE
-22.73	5	5	158	103	S	9606	    Homo sapiens	tiny_test	FALSE
-9.09	2	0	82	77	D	2	  Bacteria	tiny_test	FALSE
-9.09	2	2	82	77	S	1423	    Bacillus subtilis	tiny_test	FALSE
+100.00	3	0	752	86	R	1	root	tiny_test	TRUE
+100.00	3	0	752	86	D	2	  Bacteria	tiny_test	TRUE
+100.00	3	3	752	86	S	1423	    Bacillus subtilis	tiny_test	TRUE
+100.00	22	0	4450	488	R	1	root	tiny_test	FALSE
+68.18	15	0	3092	308	D	10239	  Viruses	tiny_test	FALSE
+45.45	10	10	2044	190	S	12475	    Hepatitis delta virus	tiny_test	FALSE
+22.73	5	5	1048	118	S	10665	    Enterobacteria phage T4	tiny_test	FALSE
+22.73	5	0	917	103	D	2759	  Eukaryota	tiny_test	FALSE
+22.73	5	5	917	103	S	9606	    Homo sapiens	tiny_test	FALSE
+9.09	2	0	441	77	D	2	  Bacteria	tiny_test	FALSE
+9.09	2	2	441	77	S	1423	    Bacillus subtilis	tiny_test	FALSE

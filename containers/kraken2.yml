@@ -1,3 +1,6 @@
+# kraken2 must be 2.17 or later: earlier versions don't report NCBI's `domain` rank as D,
+# coding Bacteria, Archaea and Eukaryota as unranked (R2), which leaves PROFILE's Bracken
+# call (level D) nothing to estimate.
 name: Kraken2
 label: Kraken2
 channels:
@@ -9,4 +12,4 @@ dependencies:
   - conda-forge::rsync=3.4.1
   - conda-forge::unzip=6.0
   - conda-forge::awscli=2.34.9
-  - bioconda::kraken2=2.1.3
+  - bioconda::kraken2=2.17.2

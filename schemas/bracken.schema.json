@@ -14,7 +14,7 @@
         "required": true,
         "minLength": 1
       },
-      "example": "Viruses"
+      "example": "Bacteria"
     },
     {
       "name": "taxid",
@@ -25,7 +25,7 @@
         "required": true,
         "minimum": 0
       },
-      "example": 10239
+      "example": 2
     },
     {
       "name": "rank",
@@ -73,7 +73,7 @@
     {
       "name": "fraction_total_reads",
       "title": "Fraction of Total Reads",
-      "description": "Fraction of total reads assigned to this taxon after Bracken redistribution.",
+      "description": "Fraction of total reads assigned to this taxon after Bracken redistribution. The denominator is the reads Bracken assigns at the estimation level (domain, D), not all reads: unclassified reads, and reads under taxa without a D-level ancestor (such as Viruses in the current NCBI taxonomy), are excluded.",
       "type": "number",
       "constraints": {
         "required": true,
