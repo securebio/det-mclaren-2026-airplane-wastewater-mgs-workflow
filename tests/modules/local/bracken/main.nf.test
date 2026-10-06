@@ -29,4 +29,30 @@ nextflow_process {
         }
     }
 
+    test("Should estimate Viruses at domain level with the 2025 NCBI taxonomy") {
+        // Viruses is R1 (acellular root) and follows cellular organisms, as in Kraken2
+        // reports from databases built on the 2025 taxonomy
+        tag "expect_success"
+        when {
+            params {}
+            process {
+                '''
+                input[0] = Channel.of("test")
+                    | combine(Channel.of("${projectDir}/test-data/toy-data/bracken/kraken_2025_taxonomy.report"))
+                input[1] = "${params.ref_dir}/results/kraken_db"
+                input[2] = "D"
+                input[3] = "1"
+                '''
+            }
+        }
+        then {
+            assert process.success
+            def rows = path(process.out[0][0][1]).linesGzip.drop(1).collect { it.split("\t") }
+            def est = rows.collectEntries { [(it[0]): it[5] as int] }
+            // Viruses is estimated, and its reads aren't credited to Eukaryota, the domain
+            // before it in the report
+            assert est == ["Bacteria": 20, "Eukaryota": 10, "Viruses": 15]
+        }
+    }
+
 }

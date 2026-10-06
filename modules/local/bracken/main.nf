@@ -30,6 +30,12 @@ process BRACKEN {
         else
             echo "Plain input - no unzipping needed."
         fi
+        # NCBI's 2025 taxonomy ranks Viruses "acellular root", which Kraken2 reports as
+        # unranked (R1). Bracken would then leave viral reads out at domain level and, when
+        # Viruses follows cellular organisms in the report, credit them to the domain before
+        # it. Recode Viruses as D, its code before 2025, so Bracken treats it as a domain.
+        awk 'BEGIN { FS = OFS = "\\t" } NF >= 3 && \$(NF-1) == 10239 && \$(NF-2) == "R1" { \$(NF-2) = "D" } 1' \${in} > recoded_\${in} || exit 1
+        in=recoded_\${in}
         # Handle empty files and files with no assigned reads
         x=\$(wc -l < \${in})
         y=\$(grep -c "\\\\sunclassified\\\$" \${in} || true)

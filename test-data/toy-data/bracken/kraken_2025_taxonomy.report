@@ -1,0 +1,10 @@
+ 10.00	5	5	0	0	U	0	unclassified
+ 90.00	45	0	2400	1500	R	1	root
+ 60.00	30	0	1600	1000	R1	131567	  cellular organisms
+ 40.00	20	0	1100	700	D	2	    Bacteria
+ 40.00	20	20	1100	700	S	1423	      Bacillus subtilis
+ 20.00	10	0	500	300	D	2759	    Eukaryota
+ 20.00	10	10	500	300	S	9606	      Homo sapiens
+ 30.00	15	0	800	500	R1	10239	  Viruses
+ 20.00	10	10	550	350	S	12475	    Hepatitis delta virus
+ 10.00	5	5	250	150	S	10665	    Enterobacteria phage T4

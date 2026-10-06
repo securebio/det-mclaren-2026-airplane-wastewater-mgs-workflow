@@ -30,7 +30,7 @@
     {
       "name": "rank",
       "title": "Taxonomic Rank",
-      "description": "Taxonomic rank code (e.g. D for domain, S for species).",
+      "description": "Taxonomic rank code (e.g. D for domain, S for species). Viruses, ranked acellular root by NCBI, is recoded to D by the pipeline so it is estimated alongside the domains.",
       "type": "string",
       "constraints": {
         "required": true,
@@ -73,7 +73,7 @@
     {
       "name": "fraction_total_reads",
       "title": "Fraction of Total Reads",
-      "description": "Fraction of total reads assigned to this taxon after Bracken redistribution. The denominator is the reads Bracken assigns at the estimation level (domain, D), not all reads: unclassified reads, and reads under taxa without a D-level ancestor (such as Viruses in the current NCBI taxonomy), are excluded.",
+      "description": "Fraction of total reads assigned to this taxon after Bracken redistribution. The denominator is the reads Bracken assigns at the estimation level (domain, D: Bacteria, Archaea, Eukaryota, and Viruses, which the pipeline recodes as D), not all reads. Unclassified reads are excluded, as are most reads under other taxa without a D-level ancestor, though Bracken can credit some of them, such as reads under 'other entries', to the D-level taxon before them in the report.",
       "type": "number",
       "constraints": {
         "required": true,
