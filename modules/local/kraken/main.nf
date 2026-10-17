@@ -7,13 +7,14 @@ process KRAKEN {
         tuple val(sample), path(reads)
         val db_path
         val db_download_timeout
+        val label // Distinguishes per-read output files published from one sample, e.g. "ribo"
     output:
-        tuple val(sample), path("${sample}.output.gz"), emit: output
+        tuple val(sample), path("${sample}_kraken_output_${label}.tsv.gz"), emit: output
         tuple val(sample), path("${sample}.report.gz"), emit: report
         tuple val(sample), path("input_${reads}"), emit: input
     script:
         def extractCmd = reads.toString().endsWith(".gz") ? "zcat" : "cat"
-        def out = "${sample}.output"
+        def out = "${sample}_kraken_output_${label}.tsv"
         def report = "${sample}.report"
         def par = "--use-names --report-minimizer-data --threads ${task.cpus} --report ${report} --memory-mapping"
         """

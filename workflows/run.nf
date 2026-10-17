@@ -48,6 +48,8 @@ workflow RUN {
         intermediates_run = viral_ch.inter_lca.mix(viral_ch.inter_aligner)
         reads_raw_viral = viral_ch.kmer_match
         reads_trimmed_viral = viral_ch.kmer_trimmed
+        reads_profile_subset = subset_ch.trimmed_subset_reads
+        kraken_output_run = profile_ch.kraken_output
         qc_results_run = qc_results_ch
         other_results_run = other_results_ch
         experimental_run = channel.empty()

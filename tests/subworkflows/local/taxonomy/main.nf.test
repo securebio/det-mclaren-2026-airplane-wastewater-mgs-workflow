@@ -18,7 +18,8 @@ nextflow_workflow {
                 def taxonomy_params = [
                     classification_level: "D", 
                     bracken_threshold: 5, 
-                    db_download_timeout: params.db_download_timeout
+                    db_download_timeout: params.db_download_timeout,
+                    kraken_label: "ribo"
                 ]
                 input[0] = Channel.of("test")
                     | combine(Channel.of("${projectDir}/test-data/tiny-index/reads/interleaved.fastq"))
@@ -72,7 +73,8 @@ nextflow_workflow {
                 def taxonomy_params = [
                     classification_level: "D",
                     bracken_threshold: 5,
-                    db_download_timeout: params.db_download_timeout
+                    db_download_timeout: params.db_download_timeout,
+                    kraken_label: "ribo"
                 ]
                 input[0] = Channel.of("test")
                     | combine(Channel.of("${projectDir}/test-data/tiny-index/reads/R1.fastq"))
@@ -124,7 +126,8 @@ nextflow_workflow {
                 def taxonomy_params = [
                     classification_level: "D",
                     bracken_threshold: 5,
-                    db_download_timeout: params.db_download_timeout
+                    db_download_timeout: params.db_download_timeout,
+                    kraken_label: "ribo"
                 ]
                 input[0] = Channel.of("test_empty")
                     | combine(Channel.of("${projectDir}/test-data/toy-data/empty_file.txt"))

@@ -44,6 +44,16 @@ def assertSentinelValid = { outputDir ->
     assert sentinelData.runCompletedAt != null : "runCompletedAt missing"
 }
 
+// Verify the profiling intermediates (cleaned subset reads and per-read Kraken output) were published
+def assertProfileIntermediatesPublished = { outputDir, readsFileName ->
+    def expected = [
+        "intermediates/reads/profile_subset/${readsFileName}",
+        "intermediates/kraken_output/tiny_test_kraken_output_ribo.tsv.gz",
+        "intermediates/kraken_output/tiny_test_kraken_output_noribo.tsv.gz",
+    ]
+    expected.each { f -> assert path("${outputDir}/${f}").exists() : "${f} not found" }
+}
+
 // Verify the trace has a tag column populated with id=... values on every row.
 // nf-test overrides trace.file via -with-trace=meta/trace.csv, so the trace lands
 // at ${launchDir}/meta/trace.csv during tests (not the logging/ path used in production).
@@ -106,6 +116,7 @@ nextflow_pipeline {
             // Verify result file contents match snapshot
             def resultPaths = getResultPaths("${launchDir}/output", expected)
             assert snapshot(*resultPaths).match("run_output_shortread")
+            assertProfileIntermediatesPublished("${launchDir}/output", "tiny_test_fastp.fastq.gz")
             assertSentinelValid("${launchDir}/output")
             assertTraceTagsValid("${launchDir}")
         }
@@ -124,6 +135,7 @@ nextflow_pipeline {
             // Verify result file contents match snapshot
             def resultPaths = getResultPaths("${launchDir}/output", expected)
             assert snapshot(*resultPaths).match("run_output_ont")
+            assertProfileIntermediatesPublished("${launchDir}/output", "tiny_test_filtlong.fastq.gz")
             assertSentinelValid("${launchDir}/output")
             assertTraceTagsValid("${launchDir}")
         }

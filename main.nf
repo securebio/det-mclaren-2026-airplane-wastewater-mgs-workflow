@@ -25,6 +25,8 @@ workflow {
         intermediates_run = params.mode == 'run' ? run_out.intermediates_run : channel.empty()
         reads_raw_viral = params.mode == 'run' ? run_out.reads_raw_viral : channel.empty()
         reads_trimmed_viral = params.mode == 'run' ? run_out.reads_trimmed_viral : channel.empty()
+        reads_profile_subset = params.mode == 'run' ? run_out.reads_profile_subset : channel.empty()
+        kraken_output_run = params.mode == 'run' ? run_out.kraken_output_run : channel.empty()
         qc_results_run = params.mode == 'run' ? run_out.qc_results_run : channel.empty()
         other_results_run = params.mode == 'run' ? run_out.other_results_run : channel.empty()
         experimental_run = params.mode == 'run' ? run_out.experimental_run : channel.empty()
@@ -79,6 +81,14 @@ output {
     }
     reads_trimmed_viral {
         path "intermediates/reads/trimmed_viral"
+        tags nextflow_file_class: "intermediate", "nextflow.io/temporary": "false"
+    }
+    reads_profile_subset {
+        path "intermediates/reads/profile_subset"
+        tags nextflow_file_class: "intermediate", "nextflow.io/temporary": "false"
+    }
+    kraken_output_run {
+        path "intermediates/kraken_output"
         tags nextflow_file_class: "intermediate", "nextflow.io/temporary": "false"
     }
     qc_results_run {
