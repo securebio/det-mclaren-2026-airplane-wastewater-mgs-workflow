@@ -56,8 +56,8 @@ workflow PROFILE {
         }
         // Run taxonomic profiling separately on ribo and non-ribo reads
         taxonomy_params = params_map + [classification_level: "D"]
-        tax_ribo_ch = TAXONOMY_RIBO(ribo_in, kraken_db_ch, single_end, taxonomy_params)
-        tax_noribo_ch = TAXONOMY_NORIBO(noribo_in, kraken_db_ch, single_end, taxonomy_params)
+        tax_ribo_ch = TAXONOMY_RIBO(ribo_in, kraken_db_ch, single_end, taxonomy_params + [kraken_label: "ribo"])
+        tax_noribo_ch = TAXONOMY_NORIBO(noribo_in, kraken_db_ch, single_end, taxonomy_params + [kraken_label: "noribo"])
         // Add ribosomal status to output TSVs
         kr_ribo = ADD_KRAKEN_RIBO(tax_ribo_ch.kraken_reports, "ribosomal", "TRUE", "ribo")
         kr_noribo = ADD_KRAKEN_NORIBO(tax_noribo_ch.kraken_reports, "ribosomal", "FALSE", "noribo")
@@ -73,6 +73,7 @@ workflow PROFILE {
     emit:
         bracken = br_per_sample.output
         kraken = kr_per_sample.output
+        kraken_output = tax_ribo_ch.kraken_output.mix(tax_noribo_ch.kraken_output)
         // Extra outputs for testing
         test_ribo = ribo_in
         test_noribo = noribo_in

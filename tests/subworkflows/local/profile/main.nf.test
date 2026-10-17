@@ -70,6 +70,14 @@ nextflow_workflow {
             def bracken_tab = path(workflow.out.bracken[0][1]).csv(sep: "\t", decompress: true)
             assert bracken_tab.columnCount == 9
             assert bracken_tab.columnNames == bracken_headers_exp
+            // Per-read Kraken output is labelled by set, with one line per read pair in that set
+            def kraken_outputs = workflow.out.kraken_output.collectEntries { path(it[1]).with { f -> [f.fileName.toString(), f] } }
+            assert kraken_outputs.keySet().sort() == ["test_kraken_output_noribo.tsv.gz", "test_kraken_output_ribo.tsv.gz"]
+            def ribo_pairs = path(workflow.out.test_ribo[0][1]).linesGzip.size() / 8
+            def noribo_pairs = path(workflow.out.test_noribo[0][1]).linesGzip.size() / 8
+            assert ribo_pairs != noribo_pairs // Otherwise a swapped label would go unnoticed
+            assert kraken_outputs["test_kraken_output_ribo.tsv.gz"].linesGzip.size() == ribo_pairs
+            assert kraken_outputs["test_kraken_output_noribo.tsv.gz"].linesGzip.size() == noribo_pairs
         }
     }
 

@@ -43,6 +43,8 @@ Main heading represents the folder name, and subheadings represent a description
 - `aligner_hits_all.tsv.gz`: List of all putative viral alignments (primary, secondary and supplementary) from the aligner used in the `EXTRACT_VIRAL_READS` subworkflow (bowtie2 for short reads or minimap2 for ONT) with modified columns from the [SAM specification](https://samtools.github.io/hts-specs/SAMv1.pdf).
 - `lca_hits_all.tsv.gz`: List of putative viral reads after having applied LCA to `aligner_hits_all.tsv.gz`, along with columns representing summary statistics.
 - `reads/raw_viral/*`: Directory containing raw reads corresponding to those reads that survive initial viral k-mer screening (with Nucleaze). (Note: this is not currently produced for ONT data.)
+- `reads/profile_subset/{sample}_fastp.fastq.gz` (`{sample}_filtlong.fastq.gz` for ONT): The cleaned subset of reads produced by SUBSET_TRIM, which feeds taxonomic profiling and the `cleaned` QC statistics. Paired-end reads are interleaved.
+- `kraken_output/{sample}_kraken_output_{ribo,noribo}.tsv.gz`: Kraken2's per-read output for the ribosomal and non-ribosomal sets of the cleaned subset, in Kraken2's [standard output format](https://github.com/DerrickWood/kraken2/wiki/Manual#standard-kraken-output-format) (tab-separated, no header; run with `--use-names`, so the third column gives the taxon name with its taxid). Paired-end reads are merged or joined before classification, so each line is one read pair, identified by the ID of the pair's first mate in `reads/profile_subset/`. A read's ribosomal status is given by the file it appears in.
 
 ### `results/`
 

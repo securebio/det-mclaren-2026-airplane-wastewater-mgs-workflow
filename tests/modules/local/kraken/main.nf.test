@@ -18,12 +18,15 @@ nextflow_process {
                     | combine(Channel.of("${projectDir}/test-data/tiny-index/reads/R1.fastq"))
                 input[1] = "${params.ref_dir}/results/kraken_db"
                 input[2] = params.db_download_timeout
+                input[3] = "ribo"
                 '''
             }
         }
         then {
             // Should run without failures
             assert process.success
+            // Output file should be named by sample and label
+            assert path(process.out.output[0][1]).fileName.toString() == "test_kraken_output_ribo.tsv.gz"
             // Output lines should match input reads
             def output_lines = path(process.out.output[0][1]).linesGzip.size()
             def input_reads  = path(process.out.input[0][1]).readLines().size() / 4
@@ -42,6 +45,7 @@ nextflow_process {
                     | combine(Channel.of("${projectDir}/test-data/toy-data/empty_file.txt"))
                 input[1] = "${params.ref_dir}/results/kraken_db"
                 input[2] = params.db_download_timeout
+                input[3] = "ribo"
                 '''
             }
         }
