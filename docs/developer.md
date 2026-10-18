@@ -98,18 +98,17 @@ All Rust tools live in the centralized `rust-tools/` directory, organized as a C
 nextflow run main.nf -profile rust_dev ...
 ```
 
-**Testing on AWS Batch:**
+**Testing on AWS Batch:** push your build to a registry Wave can pull from, and point the `rust_tools` label at it in a config file:
 ```bash
-# Build, tag with your username, and push to ECR:
 ./bin/build-rust-local.sh
-docker tag nao-rust-tools:local public.ecr.aws/q0n1c7g8/nao-mgs-workflow/rust-tools:dev-$(whoami)
-docker push public.ecr.aws/q0n1c7g8/nao-mgs-workflow/rust-tools:dev-$(whoami)
+docker tag nao-rust-tools:local <REGISTRY>/rust-tools:<TAG>
+docker push <REGISTRY>/rust-tools:<TAG>
 
-# Run on Batch with your container:
-nextflow run main.nf --rust_tools_version dev-$(whoami) -profile batch ...
+# In a config file passed with -c, or in the launch directory's nextflow.config:
+# process { withLabel: rust_tools { container = "<REGISTRY>/rust-tools:<TAG>" } }
 ```
 
-**Note:** The container is automatically rebuilt by GitHub Actions when Rust source files change on `dev`, `main`, or `stable`, and is published to ECR under a tag matching the branch name (`rust-tools:dev`, `rust-tools:main`, `rust-tools:stable`). Use `--rust_tools_version dev` to test against the dev branch build.
+**Note:** By default, this fork runs the image published in its own ECR repository (`det-mclaren-2026-airplane-wastewater-mgs-workflow/rust-tools`), at the tag set by `params.rust_tools_version` in `configs/containers.config`. Upstream's GitHub Actions workflow, which publishes `rust-tools:dev`, `:main` and `:stable` to upstream's repository, doesn't build or publish this fork's image.
 
 ## Containers
 
