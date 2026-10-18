@@ -18,6 +18,8 @@ Users relying on pipeline outputs should take the following actions in response 
 
 Note that, when a version has not yet been merged to `master`, it should have the suffix `-dev`.
 
+A downstream fork that modifies a release marks its own versions with a [local version label](https://peps.python.org/pep-0440/#local-version-identifiers): `+` and dot-separated letters and digits after the release it modifies, as in `3.4.0.1+mclaren2026.1`. Use `+`, not a hyphen: `pyproject.toml`'s version must be valid PEP 440 for the project to install. The pipeline's version-compatibility check ignores both kinds of suffix and compares only the four numbers. Increase the label's last number (`+mclaren2026.1` to `+mclaren2026.2`) for any change that could alter a run's outputs, and before any run whose results will be reported; other changes needn't bump it.
+
 ## Dev versions and stacking
 
 A `-dev` version represents all unreleased work since the last release. For example, if the last release was `3.2.0.2`, then the current dev version is `3.2.0.3-dev` — representing the next point release in progress. Multiple PRs that each make point-level changes all share the same `-dev` version; they do not each increment the point component. A PR should only change the version from an existing `-dev` version if its changes justify a **higher-level** bump (e.g. point → results would change `3.2.0.3-dev` to `3.2.1.0-dev`).

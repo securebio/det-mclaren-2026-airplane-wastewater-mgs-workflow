@@ -13,7 +13,11 @@ import re
 import sys
 import tomllib
 
-VERSION_PATTERN = re.compile(r"^\d+\.\d+\.\d+\.\d+(-dev)?$")
+# Four numeric components, then optionally "-dev" or a PEP 440 local version label
+# ("+" and dot-separated alphanumerics, e.g. "+mclaren2026.1") marking a downstream fork
+VERSION_PATTERN = re.compile(
+    r"^\d+\.\d+\.\d+\.\d+(-dev|\+[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?$"
+)
 
 
 def validate_version(version: str, source: str) -> str:
@@ -24,7 +28,7 @@ def validate_version(version: str, source: str) -> str:
     if not VERSION_PATTERN.match(version):
         raise ValueError(
             f"Invalid version format in {source}: {version!r}. "
-            "Expected format: X.Y.Z.W or X.Y.Z.W-dev"
+            "Expected format: X.Y.Z.W, X.Y.Z.W-dev or X.Y.Z.W+label"
         )
     return version
 
@@ -40,7 +44,7 @@ def get_changelog_version(path: str = "CHANGELOG.md") -> str:
     """Extract version from first line of CHANGELOG.md."""
     with open(path) as f:
         first_line = f.readline().strip()
-    # Expected format: "# vX.Y.Z.W" or "# vX.Y.Z.W-dev"
+    # Expected format: "# vX.Y.Z.W", "# vX.Y.Z.W-dev" or "# vX.Y.Z.W+label"
     prefix = "# v"
     if not first_line.startswith(prefix):
         raise ValueError(
