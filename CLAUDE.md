@@ -2,7 +2,13 @@
 
 This file contains guidelines for Claude Code when working on this repository.
 
-**Repository:** `securebio/nao-mgs-workflow` on GitHub.
+**Repository:** `securebio/det-mclaren-2026-airplane-wastewater-mgs-workflow` on GitHub, a fork of `securebio/nao-mgs-workflow` 3.4.0.1 made for the analysis in `securebio/det-mclaren-2026-airplane-wastewater`. The rest of this file is upstream's, and where it conflicts with the fork, the fork wins:
+
+- **Branches and PRs:** the fork has no `dev` branch. Branch from `main` and target `main`; the org requires PRs to `main`.
+- **Versions:** the fork's version is upstream's release plus a local label (`3.4.0.1+mclaren2026.1`; see `docs/versioning.md`), not a `-dev` version. The `version-bump` agent and `prepare-release` skill follow upstream's scheme and don't apply; bump the label's last number by hand for any change that could alter a run's outputs (see `docs/versioning.md`), with a matching CHANGELOG heading.
+- **CI:** GitHub Actions are disabled on the fork, and its workflows expect upstream's secrets and Rust-tools tags. Run checks locally.
+- **Removed outputs:** DOWNSTREAM no longer runs BLAST validation or publishes `validation_hits`; duplicate marks are in `duplicate_marked_hits`. The `benchmark-downstream` skill and `bin/compare_downstream_runs.py` still expect upstream's outputs, so their read-level and BLAST comparisons are skipped on this fork's runs.
+- **Rust tools:** the `rust_tools` label pulls this fork's own image (see `configs/containers.config`), not upstream's `rust-tools:main`/`dev`.
 
 ## GitHub Interaction Policies
 
