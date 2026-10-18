@@ -10,13 +10,15 @@ RUN apk add --no-cache musl-dev git
 WORKDIR /build
 
 # Copy the entire Rust workspace and build all tools
-# The workspace Cargo.toml lists all members; --workspace builds them all
+# The workspace Cargo.toml lists all members; --workspace builds them all, and --locked
+# builds with the committed Cargo.lock, failing rather than updating it if it is stale
 COPY rust-tools/ ./rust-tools/
-RUN cd rust-tools && cargo build --workspace --release
+RUN cd rust-tools && cargo build --workspace --release --locked
 
 # Install nucleaze from GitHub (external tool, not a workspace member)
-# Pinned to v1.5.0-alpha commit hash for immutability (tags are mutable)
-RUN cargo install nucleaze --git https://github.com/jackdougle/nucleaze.git --rev 4090fe3
+# Pinned to v1.5.0-alpha commit hash for immutability (tags are mutable), and --locked builds
+# it with the dependency versions in its Cargo.lock rather than resolving them at build time
+RUN cargo install nucleaze --locked --git https://github.com/jackdougle/nucleaze.git --rev 4090fe3
 
 # =============================================================================
 # Stage 2: Runtime
