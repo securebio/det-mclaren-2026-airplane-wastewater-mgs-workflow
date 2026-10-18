@@ -63,7 +63,7 @@ Alternatively, you can set `tower.accessToken` in your Nextflow configuration fi
 
 ## 4. Configure Seqera ECR credentials
 
-This pipeline's containers are pulled from a public AWS ECR repository, except the SortMeRNA and Kraken2 images, which are public Seqera Containers builds (`community.wave.seqera.io`). You need to configure AWS ECR registry credentials in your Seqera account to allow Wave to pull container images.
+This pipeline's containers are pulled from public AWS ECR repositories: most from upstream nao-mgs-workflow's, and the Rust-tools image from this fork's own (`det-mclaren-2026-airplane-wastewater-mgs-workflow/rust-tools`). The SortMeRNA and Kraken2 images are public Seqera Containers builds (`community.wave.seqera.io`). You need to configure AWS ECR registry credentials in your Seqera account to allow Wave to pull container images.
 
 1. Log in to your Seqera Platform account
 2. Navigate to your workspace credentials
@@ -111,7 +111,7 @@ nextflow run REPO_DIR \
 Replace `<BASE_DIR>` with the directory (likely on S3) where you want to store your index files, and `<BATCH_QUEUE_NAME>` with your AWS Batch job queue name. (You shouldn't need to modify anything else at this stage. However, if you'd like to, you can [learn more about what each parameter does here](./config.md).)
 
 > [!NOTE]
-> The Rust-tools container version defaults to `main`. When building an index from an unmerged `dev` checkout (or any branch not yet on `main`), pass `--rust_tools_version dev` (or set `export RUST_TOOLS_VERSION=dev`) so the index is built with dev's Rust tools rather than the older versions pinned on `main`. Use the same version when you later run the pipeline against this index.
+> The Rust-tools container defaults to this fork's published image, a fixed tag (`params.rust_tools_version`) in its own ECR repository; upstream's `main` and `dev` tags don't exist there. If you change anything under `rust-tools/` or `docker/nao-rust-tools.Dockerfile`, build and push your own image and point the `rust_tools` label at it. The INDEX workflow builds its Nucleaze k-mer index with this image; indexes built by upstream 3.2.2.0 through 3.4.0.1 work with it too, since they pin Nucleaze to the same revision.
 
 > [!TIP]
 > You don't need to point `nextflow run` at `main.nf` any other workflow file; pointing to the directory will cause Nextflow to automatically run `main.nf` from that directory.

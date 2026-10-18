@@ -97,7 +97,7 @@ nextflow run <PATH/TO/PIPELINE/DIR> \
 where `<PATH/TO/PIPELINE/DIR>` specifies the path to the directory containing this repository's `main.nf` file. Any `params.*` value in the config file can be overridden with `--<param>` on the command line. If you copied the config file into the launch directory as `nextflow.config`, you can omit the `-c` flag.
 
 > [!NOTE]
-> The Rust-tools container version defaults to `main`. If you're running an unmerged `dev` checkout (or a branch not yet on `main`), add `--rust_tools_version dev` (or set `export RUST_TOOLS_VERSION=dev`) so the pipeline uses dev's Rust tools. This must match the version used to build the index you point `--ref_dir` at.
+> The Rust-tools container defaults to this fork's published image, a fixed tag (`params.rust_tools_version`) in its own ECR repository, which carries this fork's duplicate-marking changes. Upstream's `main` and `dev` tags don't exist there. If you change anything under `rust-tools/` or `docker/nao-rust-tools.Dockerfile`, build and push your own image and point the `rust_tools` label at it.
 
 > [!TIP]
 > To use a non-default profile, add `-profile <PROFILE_NAME>` to the command.
