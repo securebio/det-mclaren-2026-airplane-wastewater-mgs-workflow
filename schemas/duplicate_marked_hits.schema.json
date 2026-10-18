@@ -364,7 +364,7 @@
     {
       "name": "sim_dup_exemplar",
       "title": "Similarity Duplicate Exemplar Read ID",
-      "description": "Read ID of the exemplar selected to represent this read's similarity-based duplicate group. Similarity marking considers every read, clustering sequences by minimizers (via nao-dedup) and comparing each read with each candidate cluster's founding read, allowing a 1 nt offset and at most floor(params.sim_dup_max_error_frac x overlap) mismatches per mate. The exemplar is the cluster's highest-scoring member (by mean base quality, then length), which need not be the read that founded it. A read that is its own exemplar (seq_id == sim_dup_exemplar) is distinct, or the representative of its group.",
+      "description": "Read ID of the exemplar selected to represent this read's similarity-based duplicate group. Similarity marking considers every read, clustering sequences by minimizers (via nao-dedup) and comparing each read with each candidate cluster's founding read, allowing a 1 nt offset and at most floor(params.sim_dup_max_error_frac x overlap) mismatches per mate. The exemplar is the cluster's highest-scoring member (scored as 1000 x mean Phred quality over both mates plus total length; exact ties go to the earlier read), which need not be the read that founded it. A read that is its own exemplar (seq_id == sim_dup_exemplar) is distinct, or the representative of its group.",
       "type": "string",
       "constraints": {
         "minLength": 1
