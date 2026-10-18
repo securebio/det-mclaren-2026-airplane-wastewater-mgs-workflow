@@ -1,5 +1,8 @@
 # Nucleic Acid Observatory Viral Metagenomics Pipeline
 
+> [!IMPORTANT]
+> This repository is a fork of [nao-mgs-workflow](https://github.com/securebio/nao-mgs-workflow) 3.4.0.1, modified for the analysis in [det-mclaren-2026-airplane-wastewater](https://github.com/securebio/det-mclaren-2026-airplane-wastewater). Its versions carry the local label `+mclaren2026.N` (see `pyproject.toml`), and the top entry of [CHANGELOG.md](CHANGELOG.md) lists how it differs from upstream. The SortMeRNA reference and index used by RUN aren't included: build them with `bin/build_sortmerna_index.sh`.
+
 This Nextflow pipeline is designed to process metagenomic sequencing data, characterize overall taxonomic composition, and identify and quantify reads mapping to viruses infecting certain host taxa of interest. It was developed as part of the [Nucleic Acid Observatory](https://naobservatory.org/) project.
 
 The pipeline currently consists of three workflows:
