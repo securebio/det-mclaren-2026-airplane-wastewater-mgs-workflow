@@ -37,10 +37,11 @@ process SORTMERNA {
         fi
         # Keep SortMeRNA's key-value store and read buffers on local disk
         smr_dir=\$(mktemp -d "\${TMPDIR:-/tmp}/sortmerna.XXXXXX")
-        # SortMeRNA crashes on empty input. Read the first byte to test for it, tolerating
-        # only the broken pipe that closing the stream early causes.
-        gzip -dcf ${reads} | head -c 1 > "\${smr_dir}/first_byte" || [[ \${PIPESTATUS[0]} -eq 141 ]]
-        if [[ ! -s "\${smr_dir}/first_byte" ]]; then
+        # SortMeRNA crashes on empty input, so test for it. Count every byte rather than
+        # reading only the first, which would close the pipe early and make gzip's exit
+        # status depend on how the task handles SIGPIPE; a corrupt gzip still fails here.
+        n_bytes=\$(gzip -dcf ${reads} | wc -c)
+        if [[ "\${n_bytes}" -eq 0 ]]; then
             printf "" | gzip > ${match}
             printf "" | gzip > ${nomatch}
             echo "Empty input: SortMeRNA not run" > ${log}
