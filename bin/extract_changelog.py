@@ -16,9 +16,12 @@ from pathlib import Path
 
 DEFAULT_CHANGELOG_PATH = Path("CHANGELOG.md")
 
-# Pattern to match version headers: "# vX.Y.Z.W" or "# vX.Y.Z.W-dev"
+# Pattern to match version headers: "# vX.Y.Z.W", "# vX.Y.Z.W-dev" or "# vX.Y.Z.W+label"
+# (a PEP 440 local version label, e.g. "+mclaren2026.1")
 # Also tolerates no space after # (e.g., "#v1.2.3.4")
-VERSION_HEADER_PATTERN = re.compile(r"^#\s*v?(\d+\.\d+\.\d+\.\d+(?:-dev)?)$")
+VERSION_HEADER_PATTERN = re.compile(
+    r"^#\s*v?(\d+\.\d+\.\d+\.\d+(?:-dev|\+[0-9A-Za-z]+(?:\.[0-9A-Za-z]+)*)?)$"
+)
 
 # =============================================================================
 # Helper functions

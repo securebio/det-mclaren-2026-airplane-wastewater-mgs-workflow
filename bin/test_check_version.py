@@ -22,6 +22,8 @@ class TestValidateVersion:
             "0.0.0.0",
             "10.20.30.40",
             "1.2.3.4-dev",
+            "1.2.3.4+mclaren2026.1",
+            "1.2.3.4+fork",
         ],
     )
     def test_valid(self, version: str) -> None:
@@ -35,6 +37,10 @@ class TestValidateVersion:
             "1.2.3.4.5",
             "v1.2.3.4",
             "1.2.3.4-beta",
+            "1.2.3.4-dev+fork",
+            "1.2.3.4+",
+            "1.2.3.4+fork.",
+            "1.2.3.4+fork-1",
             "a.b.c.d",
         ],
     )
@@ -48,7 +54,7 @@ class TestValidateVersion:
 
 
 class TestGetPyprojectVersion:
-    @pytest.mark.parametrize("version", ["1.2.3.4", "1.2.3.4-dev"])
+    @pytest.mark.parametrize("version", ["1.2.3.4", "1.2.3.4-dev", "1.2.3.4+fork.1"])
     def test_valid(self, tmp_path: Path, version: str) -> None:
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text(f'[project]\nversion = "{version}"\n')
@@ -72,7 +78,7 @@ class TestGetPyprojectVersion:
 
 
 class TestGetChangelogVersion:
-    @pytest.mark.parametrize("version", ["1.2.3.4", "1.2.3.4-dev"])
+    @pytest.mark.parametrize("version", ["1.2.3.4", "1.2.3.4-dev", "1.2.3.4+fork.1"])
     def test_valid(self, tmp_path: Path, version: str) -> None:
         changelog = tmp_path / "CHANGELOG.md"
         changelog.write_text(f"# v{version}\n\n## Changes\n")

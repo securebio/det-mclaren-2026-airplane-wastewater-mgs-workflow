@@ -21,6 +21,7 @@ class TestParseVersionHeader:
             ("# 1.2.3.4", "1.2.3.4"),
             ("# v1.2.3.4-dev", "1.2.3.4-dev"),
             ("# 1.2.3.4-dev", "1.2.3.4-dev"),
+            ("# v1.2.3.4+mclaren2026.1", "1.2.3.4+mclaren2026.1"),
             ("# v0.0.0.0", "0.0.0.0"),
             ("# v10.20.30.40", "10.20.30.40"),
             ("#v1.2.3.4", "1.2.3.4"),  # No space after #
@@ -41,6 +42,8 @@ class TestParseVersionHeader:
             "v1.2.3.4",  # No #
             "# Version 1.2.3.4",  # Wrong prefix
             "# v1.2.3.4-beta",  # Wrong suffix (not -dev)
+            "# v1.2.3.4+",  # Empty local label
+            "# v1.2.3.4-dev+fork",  # -dev and a local label together
             "# va.b.c.d",  # Non-numeric
             "",  # Empty
             "   ",  # Whitespace only

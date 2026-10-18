@@ -7,9 +7,10 @@
 def isVersionLess(version1, version2) {
     /* Compare two semantic versions and return a boolean stating
     whether the first is less (i.e. older) than the second. */
-    // Remove terminal tags (anything after a hyphen)
-    def cleanVersion1 = version1.tokenize("-")[0]
-    def cleanVersion2 = version2.tokenize("-")[0]
+    // Remove terminal tags (anything after a hyphen, e.g. "-dev", or a plus, e.g. a local
+    // version label such as "+mclaren2026.1")
+    def cleanVersion1 = version1.tokenize("-+")[0]
+    def cleanVersion2 = version2.tokenize("-+")[0]
     // Split components by periods
     def v1Components = cleanVersion1.tokenize(".")
     def v2Components = cleanVersion2.tokenize(".")
