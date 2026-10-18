@@ -1,3 +1,34 @@
+# v3.4.0.1+mclaren2026.1
+
+Changes in this fork relative to [nao-mgs-workflow](https://github.com/securebio/nao-mgs-workflow) 3.4.0.1, made for the analysis in [det-mclaren-2026-airplane-wastewater](https://github.com/securebio/det-mclaren-2026-airplane-wastewater).
+
+## Duplicate marking
+
+- Mark duplicates in DOWNSTREAM by sequence similarity alone, skipping the alignment-coordinate pass, so every read is a candidate. `prim_align_dup_exemplar` is kept for compatibility and equals `seq_id`; `{GROUP}_duplicate_stats.tsv.gz` is no longer produced, and `params.aln_dup_deviation` is removed.
+- Allow mismatches up to 2% of each mate's overlap (rounded down) when marking similarity duplicates, set by the new `params.sim_dup_max_error_frac` (nao-dedup's own default is 1%).
+- Publish the duplicate-marked hits as `{GROUP}_duplicate_marked_hits.tsv.gz`, with a new schema; clade counts are counted from this table.
+- Size `MARK_SIMILARITY_DUPLICATES` memory for groups with few duplicates, which need more memory per input byte, and add a 128 GB tier.
+
+## Read cleaning and taxonomic profiling
+
+- Stop trimming read 5' ends in fastp (drop `--cut_front`), in both viral read extraction and the profiling subset.
+- Screen ribosomal reads in short-read RUN with SortMeRNA against its standard sensitive database (SILVA SSU and LSU, Rfam 5S and 5.8S; release v4.3.4) instead of BBDuk; a pair is ribosomal if either mate aligns. Requires `params.sortmerna_ref` and `params.sortmerna_index_dir`, built with `bin/build_sortmerna_index.sh`. ONT still screens with minimap2.
+- Upgrade kraken2 from 2.1.3 to 2.17.2. It codes NCBI's domain rank as `D` (with the 2025 NCBI taxonomy, 2.1.3 coded Bacteria, Archaea and Eukaryota as `R2`), and counts `n_minimizers_total` per k-mer, so that column rises. Per-read classifications are unchanged on the pipeline's test data.
+- Have Bracken estimate Viruses (rank `R1`, "acellular root", in the 2025 NCBI taxonomy) alongside the domains, by recoding its row to `D` before running Bracken. This also stops a Bracken bug from crediting viral reads to the domain listed before Viruses.
+
+## Validation
+
+- Remove BLAST validation from DOWNSTREAM; `{GROUP}_validation_hits.tsv.gz` is no longer produced, and the DOWNSTREAM config templates drop `validation_n_sample`, the `blast_*` parameters and `taxid_artificial`.
+
+## New workflow outputs
+
+- Publish RUN's cleaned profiling subset (`intermediates/reads/profile_subset/`) and Kraken2's per-read output for its ribosomal and non-ribosomal sets (`intermediates/kraken_output/`).
+
+## Containers and versioning
+
+- Run the Rust tools from this fork's own image, `det-mclaren-2026-airplane-wastewater-mgs-workflow/rust-tools` on SecureBio's public ECR registry, built from locked dependencies.
+- Accept PEP 440 local version labels (`+...`) in the pipeline's version-compatibility check and release tooling, and mark this fork's version with one.
+
 # v3.4.0.1
 
 - Raise BLAST memory from 256 GB to 360 GB and Kraken2 memory from 128 GB to 176 GB, so the current core_nt and PlusPF databases fit in memory instead of being re-read from disk, which slowed BLAST in 3.4.0.0. Results are unchanged. (#1051)
