@@ -85,7 +85,8 @@ else
     if [[ "$tarball_sha256" != "$DB_SHA256" ]]; then
         fail "${tarball} has sha256 ${tarball_sha256}, not the ${DB_RELEASE} release's ${DB_SHA256}"
     fi
-    fasta_member=$(tar -tzf "$tarball" | grep -E "(^|/)${DB_FASTA_NAME//./\\.}$")
+    fasta_member=$(tar -tzf "$tarball" | grep -E "(^|/)${DB_FASTA_NAME//./\\.}$") \
+        || fail "No ${DB_FASTA_NAME} in ${tarball}"
     tar -xzf "$tarball" -O "$fasta_member" > "${OUT_DIR}/${fasta_name}"
     reference_source="SortMeRNA ${DB_RELEASE} database.tar.gz member ${fasta_member} (${DB_URL})"
     if [[ -z "${DB_TARBALL:-}" ]]; then
@@ -105,7 +106,10 @@ docker run --rm -u "$(id -u):$(id -g)" \
     || fail "Index build failed:" "${OUT_DIR}/build.log"
 
 # 3. Check that the index loads and finds a read cut from the first reference sequence
-check_dir=$(mktemp -d)
+# The check directory is under OUT_DIR rather than the host's /tmp, which some Docker
+# installs (e.g. snap) can't mount; it's removed however the script exits
+check_dir=$(mktemp -d "${OUT_DIR}/check.XXXXXX")
+trap 'rm -rf "$check_dir"' EXIT
 awk '/^>/{if (seq) exit; next} {seq = seq $0} END{print "@check\n" substr(seq, 1, 150) "\n+\n" sprintf("%150s", "") }' \
     "${OUT_DIR}/${fasta_name}" | sed '4s/ /I/g' > "${check_dir}/check.fastq"
 docker run --rm -u "$(id -u):$(id -g)" \
@@ -118,8 +122,8 @@ docker run --rm -u "$(id -u):$(id -g)" \
         --workdir /tmp/sortmerna-work --threads 1 > "${check_dir}/check.log" 2>&1 \
     || fail "Index check failed:" "${check_dir}/check.log"
 # SortMeRNA names FASTQ output .fq
+[[ -f "${check_dir}/aligned.fq" ]] || fail "Index check failed: SortMeRNA wrote no aligned reads" "${check_dir}/check.log"
 n_aligned=$(( $(wc -l < "${check_dir}/aligned.fq") / 4 ))
-rm -rf "$check_dir"
 [[ "$n_aligned" -eq 1 ]] || fail "Index check failed: the test read did not align"
 
 # 4. Record what was built
